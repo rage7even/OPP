@@ -5,26 +5,36 @@ import java.util.Scanner;
 
 import university.core.University;
 import university.education.Course;
+import university.education.CourseOffering;
 import university.education.Enrollment;
 import university.education.Mark;
 import university.enums.LessonType;
+import university.enums.RegistrationStatus;
 import university.employees.Manager;
 import university.employees.Teacher;
 import university.users.Student;
+import university.users.User;
 
 public final class EducationApp {
     private EducationApp() {
     }
 
-    public static void run(Scanner scanner) {
+    public static void run(Scanner scanner, User currentUser) {
         while (true) {
             System.out.println(I18n.t("education.title"));
             System.out.println(I18n.t("education.show.courses"));
-            System.out.println(I18n.t("education.register"));
-            System.out.println(I18n.t("education.approve"));
-            System.out.println(I18n.t("education.put.mark"));
-            System.out.println(I18n.t("education.transcript"));
-            System.out.println(I18n.t("education.teachers"));
+            if (currentUser instanceof Student) {
+                System.out.println(I18n.t("education.register"));
+                System.out.println(I18n.t("education.transcript"));
+                System.out.println(I18n.t("education.teachers"));
+            }
+            if (currentUser instanceof Manager) {
+                System.out.println(I18n.t("education.approve"));
+                System.out.println(I18n.t("education.reject"));
+            }
+            if (currentUser instanceof Teacher) {
+                System.out.println(I18n.t("education.put.mark"));
+            }
             System.out.println(I18n.t("back"));
 
             int choice = ConsoleInput.readInt(scanner, I18n.t("choose"));
@@ -33,19 +43,46 @@ public final class EducationApp {
                     printList(University.getInstance().getCourses());
                     break;
                 case 2:
-                    registerStudent();
+                    if (currentUser instanceof Student) {
+                        registerStudent(scanner, (Student) currentUser);
+                    } else {
+                        System.out.println(I18n.t("access.denied"));
+                    }
                     break;
                 case 3:
-                    approvePending();
+                    if (currentUser instanceof Manager) {
+                        approvePending(scanner, (Manager) currentUser);
+                    } else {
+                        System.out.println(I18n.t("access.denied"));
+                    }
                     break;
                 case 4:
-                    putMark(scanner);
+                    if (currentUser instanceof Teacher) {
+                        putMark(scanner, (Teacher) currentUser);
+                    } else {
+                        System.out.println(I18n.t("access.denied"));
+                    }
                     break;
                 case 5:
-                    showTranscript();
+                    if (currentUser instanceof Student) {
+                        showTranscript((Student) currentUser);
+                    } else {
+                        System.out.println(I18n.t("access.denied"));
+                    }
                     break;
                 case 6:
-                    showCourseTeachers();
+                    if (currentUser instanceof Student) {
+                        showCourseTeachers(scanner);
+                    } else {
+                        System.out.println(I18n.t("access.denied"));
+                    }
+                    break;
+                case 7:
+                    if (currentUser instanceof Manager) {
+                        rejectPending(scanner, (Manager) currentUser);
+                    } else {
+                        System.out.println(I18n.t("access.denied"));
+                    }
                     break;
                 case 0:
                     return;
@@ -56,49 +93,88 @@ public final class EducationApp {
         }
     }
 
-    private static void registerStudent() {
-        Student student = AppData.firstStudent();
-        if (student == null) {
-            System.out.println(I18n.t("no.student"));
+    private static void registerStudent(Scanner scanner, Student student) {
+        if (University.getInstance().getCourseOfferings().isEmpty()) {
+            System.out.println(I18n.t("no.offering"));
             return;
         }
-        university.education.CourseOffering offering = AppData.firstOffering();
+        for (CourseOffering offering : University.getInstance().getCourseOfferings()) {
+            System.out.println(AppFormatter.offering(offering));
+        }
+        CourseOffering offering = findOffering(ConsoleInput.readLine(scanner, I18n.t("offering.id")));
         if (offering == null) {
             System.out.println(I18n.t("no.offering"));
             return;
         }
-        Enrollment enrollment = student.registerCourse(offering);
-        System.out.println(I18n.f("created.enrollment", AppFormatter.enrollment(enrollment)));
+        try {
+            Enrollment enrollment = student.registerCourse(offering);
+            System.out.println(I18n.f("created.enrollment", AppFormatter.enrollment(enrollment)));
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
-    private static void approvePending() {
-        Manager manager = AppData.firstManager();
-        if (manager == null) {
-            System.out.println(I18n.t("no.manager"));
-            return;
-        }
-        boolean approved = false;
+    private static void approvePending(Scanner scanner, Manager manager) {
+        List<Enrollment> pending = new java.util.ArrayList<Enrollment>();
         for (Student student : AppData.students()) {
             for (Enrollment enrollment : student.getEnrollments()) {
-                if (enrollment.getStatus() == university.enums.RegistrationStatus.PENDING) {
-                    manager.approveStudentRegistration(enrollment);
-                    System.out.println(I18n.f("approved", AppFormatter.enrollment(enrollment)));
-                    approved = true;
+                if (enrollment.getStatus() == RegistrationStatus.PENDING) {
+                    pending.add(enrollment);
                 }
             }
         }
-        if (!approved) {
+        if (pending.isEmpty()) {
             System.out.println(I18n.t("no.pending"));
+            return;
+        }
+        for (Enrollment enrollment : pending) {
+            System.out.println(AppFormatter.enrollment(enrollment));
+        }
+        Enrollment enrollment = findEnrollment(pending, ConsoleInput.readLine(scanner, I18n.t("enrollment.id")));
+        if (enrollment == null) {
+            System.out.println(I18n.t("no.enrollment"));
+            return;
+        }
+        try {
+            manager.approveStudentRegistration(enrollment);
+            System.out.println(I18n.f("approved", AppFormatter.enrollment(enrollment)));
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
         }
     }
 
-    private static void putMark(Scanner scanner) {
-        Teacher teacher = AppData.firstTeacher();
-        if (teacher == null) {
-            System.out.println(I18n.t("no.teacher"));
+    private static void rejectPending(Scanner scanner, Manager manager) {
+        List<Enrollment> pending = pendingEnrollments();
+        if (pending.isEmpty()) {
+            System.out.println(I18n.t("no.pending"));
             return;
         }
-        Enrollment enrollment = AppData.firstEnrollment();
+        for (Enrollment enrollment : pending) {
+            System.out.println(AppFormatter.enrollment(enrollment));
+        }
+        Enrollment enrollment = findEnrollment(pending, ConsoleInput.readLine(scanner, I18n.t("enrollment.id")));
+        if (enrollment == null) {
+            System.out.println(I18n.t("no.enrollment"));
+            return;
+        }
+        try {
+            manager.rejectStudentRegistration(enrollment);
+            System.out.println(I18n.f("rejected", AppFormatter.enrollment(enrollment)));
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private static void putMark(Scanner scanner, Teacher teacher) {
+        List<Enrollment> approved = approvedEnrollments();
+        if (approved.isEmpty()) {
+            System.out.println(I18n.t("no.approved.enrollment"));
+            return;
+        }
+        for (Enrollment item : approved) {
+            System.out.println(AppFormatter.enrollment(item));
+        }
+        Enrollment enrollment = findEnrollment(approved, ConsoleInput.readLine(scanner, I18n.t("enrollment.id")));
         if (enrollment == null) {
             System.out.println(I18n.t("no.enrollment"));
             return;
@@ -111,35 +187,83 @@ public final class EducationApp {
         System.out.println(I18n.f("mark.saved", enrollment.getMark()));
     }
 
-    private static void showTranscript() {
-        Student student = AppData.firstStudent();
-        if (student == null) {
-            System.out.println(I18n.t("no.student"));
-            return;
-        }
+    private static void showTranscript(Student student) {
         System.out.println(student.getTranscript());
     }
 
-    private static void showCourseTeachers() {
-        Student student = AppData.firstStudent();
-        university.education.CourseOffering offering = AppData.firstOffering();
-        if (student == null) {
-            System.out.println(I18n.t("no.student"));
+    private static void showCourseTeachers(Scanner scanner) {
+        if (University.getInstance().getCourseOfferings().isEmpty()) {
+            System.out.println(I18n.t("no.offering"));
             return;
         }
+        for (CourseOffering item : University.getInstance().getCourseOfferings()) {
+            System.out.println(AppFormatter.offering(item));
+        }
+        CourseOffering offering = findOffering(ConsoleInput.readLine(scanner, I18n.t("offering.id")));
         if (offering == null) {
             System.out.println(I18n.t("no.offering"));
             return;
         }
         Course course = offering.getCourse();
-        System.out.println(I18n.f("lecture", student.viewTeacherInfo(course, LessonType.LECTURE)));
-        System.out.println(I18n.f("practice", student.viewTeacherInfo(course, LessonType.PRACTICE)));
+        System.out.println(I18n.f("lecture", findTeacher(course, LessonType.LECTURE)));
+        System.out.println(I18n.f("practice", findTeacher(course, LessonType.PRACTICE)));
     }
 
     private static void printList(List<Course> courses) {
         for (Course course : courses) {
             System.out.println(AppFormatter.course(course));
         }
+    }
+
+    private static CourseOffering findOffering(String id) {
+        for (CourseOffering offering : University.getInstance().getCourseOfferings()) {
+            if (offering.getOfferingId().equals(id) || offering.getCourse().getCourseId().equals(id)) {
+                return offering;
+            }
+        }
+        return null;
+    }
+
+    private static Enrollment findEnrollment(List<Enrollment> enrollments, String id) {
+        for (Enrollment enrollment : enrollments) {
+            if (enrollment.getEnrollmentId().equals(id)) {
+                return enrollment;
+            }
+        }
+        return null;
+    }
+
+    private static Teacher findTeacher(Course course, LessonType lessonType) {
+        for (university.education.Lesson lesson : course.getLessons()) {
+            if (lesson.getType() == lessonType) {
+                return lesson.getInstructor();
+            }
+        }
+        return null;
+    }
+
+    private static List<Enrollment> approvedEnrollments() {
+        List<Enrollment> approved = new java.util.ArrayList<Enrollment>();
+        for (Student student : AppData.students()) {
+            for (Enrollment enrollment : student.getEnrollments()) {
+                if (enrollment.getStatus() == RegistrationStatus.APPROVED) {
+                    approved.add(enrollment);
+                }
+            }
+        }
+        return approved;
+    }
+
+    private static List<Enrollment> pendingEnrollments() {
+        List<Enrollment> pending = new java.util.ArrayList<Enrollment>();
+        for (Student student : AppData.students()) {
+            for (Enrollment enrollment : student.getEnrollments()) {
+                if (enrollment.getStatus() == RegistrationStatus.PENDING) {
+                    pending.add(enrollment);
+                }
+            }
+        }
+        return pending;
     }
 }
 

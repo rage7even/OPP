@@ -4,7 +4,17 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Scanner;
 
+import university.core.University;
+import university.employees.Admin;
+import university.employees.Manager;
+import university.employees.Teacher;
 import university.enums.Language;
+import university.enums.UserRole;
+import university.exceptions.UnauthorizedActionException;
+import university.patterns.DefaultUserFactory;
+import university.services.Session;
+import university.users.Student;
+import university.users.User;
 
 public final class Main {
     private Main() {
@@ -16,39 +26,60 @@ public final class Main {
         Scanner scanner = new Scanner(System.in);
         Language language = chooseLanguage(scanner);
         AppLanguage.apply(language);
-        System.out.println(I18n.f("selected.language", language));
+        System.out.println(I18n.f("selected.language", I18n.languageName(language)));
         System.out.println();
+        ensureBootstrapAdmin();
 
         while (true) {
-            System.out.println(I18n.t("launcher.title"));
-            System.out.println(I18n.t("launcher.admin"));
-            System.out.println(I18n.t("launcher.education"));
-            System.out.println(I18n.t("launcher.manager"));
-            System.out.println(I18n.t("launcher.research"));
-            System.out.println(I18n.t("launcher.support"));
-            System.out.println(I18n.t("launcher.exit"));
+            Session session = login(scanner);
+            if (session == null) {
+                continue;
+            }
+            runLauncher(scanner, session);
+        }
+    }
 
+    private static void runLauncher(Scanner scanner, Session session) {
+        User user = session.getUser();
+        while (true) {
+            printLauncher(user);
             int choice = ConsoleInput.readInt(scanner, I18n.t("choose.app"));
 
             switch (choice) {
                 case 1:
-                    AdminApp.run(scanner);
+                    if (user instanceof Admin) {
+                        AdminApp.run(scanner);
+                    } else {
+                        System.out.println(I18n.t("access.denied"));
+                    }
                     break;
                 case 2:
-                    EducationApp.run(scanner);
+                    if (user instanceof Student || user instanceof Teacher || user instanceof Manager) {
+                        EducationApp.run(scanner, user);
+                    } else {
+                        System.out.println(I18n.t("access.denied"));
+                    }
                     break;
                 case 3:
-                    ManagerApp.run(scanner);
+                    if (user instanceof Manager) {
+                        ManagerApp.run(scanner, (Manager) user);
+                    } else {
+                        System.out.println(I18n.t("access.denied"));
+                    }
                     break;
                 case 4:
-                    ResearchApp.run(scanner);
+                    if (user.isResearcher()) {
+                        ResearchApp.run(scanner, user);
+                    } else {
+                        System.out.println(I18n.t("access.denied"));
+                    }
                     break;
                 case 5:
-                    SupportApp.run(scanner);
+                    SupportApp.run(scanner, user);
                     break;
                 case 0:
-                    System.out.println(I18n.t("bye"));
-                    scanner.close();
+                    University.getInstance().getAuthService().logout(session);
+                    System.out.println(I18n.t("logged.out"));
                     return;
                 default:
                     System.out.println(I18n.t("unknown.choice"));
@@ -57,6 +88,56 @@ public final class Main {
 
             System.out.println();
         }
+    }
+
+    private static void printLauncher(User user) {
+        System.out.println(I18n.t("launcher.title"));
+        System.out.println(I18n.f("current.user", user.getName()));
+        if (user instanceof Admin) {
+            System.out.println(I18n.t("launcher.admin"));
+        }
+        if (user instanceof Student || user instanceof Teacher || user instanceof Manager) {
+            System.out.println(I18n.t("launcher.education"));
+        }
+        if (user instanceof Manager) {
+            System.out.println(I18n.t("launcher.manager"));
+        }
+        if (user.isResearcher()) {
+            System.out.println(I18n.t("launcher.research"));
+        }
+        System.out.println(I18n.t("launcher.support"));
+        System.out.println(I18n.t("launcher.logout"));
+    }
+
+    private static Session login(Scanner scanner) {
+        System.out.println(I18n.t("login.title"));
+        System.out.println(I18n.t("launcher.exit"));
+        String email = ConsoleInput.readLine(scanner, I18n.t("email"));
+        if ("0".equals(email)) {
+            System.out.println(I18n.t("bye"));
+            System.exit(0);
+            return null;
+        }
+        String password = ConsoleInput.readLine(scanner, I18n.t("password"));
+        try {
+            Session session = University.getInstance().getAuthService().login(email, password);
+            AppLanguage.apply(AppLanguage.selected());
+            System.out.println(I18n.f("logged.in", session.getUser().getName()));
+            return session;
+        } catch (UnauthorizedActionException e) {
+            System.out.println(I18n.t("login.failed"));
+            return null;
+        }
+    }
+
+    private static void ensureBootstrapAdmin() {
+        if (!University.getInstance().getUsers().isEmpty()) {
+            return;
+        }
+        User admin = new DefaultUserFactory().create(UserRole.ADMIN, "A1", "Aigerim Admin", "admin@uni.kz", "admin");
+        admin.changeLanguage(AppLanguage.selected());
+        University.getInstance().addUser(admin);
+        System.out.println(I18n.t("bootstrap.admin.created"));
     }
 
     /*
@@ -80,9 +161,9 @@ public final class Main {
 
     private static Language chooseLanguage(Scanner scanner) {
         System.out.println(I18n.t("choose.language.title"));
-        System.out.println("1 - KZ");
-        System.out.println("2 - EN (default)");
-        System.out.println("3 - RU");
+        System.out.println("1 - Қазақша");
+        System.out.println("2 - English (default)");
+        System.out.println("3 - Русский");
         System.out.print(I18n.t("choose.language.prompt") + " ");
 
         String input = scanner.nextLine().trim();

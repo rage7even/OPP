@@ -40,6 +40,10 @@ public class Manager extends Employee {
         University.getInstance().getRegistrationService().approve(this, enrollment);
     }
 
+    public void rejectStudentRegistration(Enrollment enrollment) {
+        University.getInstance().getRegistrationService().reject(this, enrollment);
+    }
+
     public CourseOffering addCourseForRegistration(Course course, String major, int year) {
         CourseOffering offering = new CourseOffering("OFF-" + course.getCourseId() + "-" + year, course, major, year);
         University.getInstance().addCourseOffering(offering);

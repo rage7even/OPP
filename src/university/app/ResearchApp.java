@@ -19,7 +19,7 @@ public final class ResearchApp {
     private ResearchApp() {
     }
 
-    public static void run(Scanner scanner) {
+    public static void run(Scanner scanner, User currentUser) {
         while (true) {
             System.out.println(I18n.t("research.title"));
             System.out.println(I18n.t("research.create.journal"));
@@ -37,10 +37,10 @@ public final class ResearchApp {
                     createJournal(scanner);
                     break;
                 case 2:
-                    publishPaper(scanner);
+                    publishPaper(scanner, currentUser);
                     break;
                 case 3:
-                    showHIndex();
+                    showHIndex(currentUser);
                     break;
                 case 4:
                     printSorted(scanner);
@@ -49,10 +49,10 @@ public final class ResearchApp {
                     assignSupervisor();
                     break;
                 case 6:
-                    joinProject(scanner);
+                    joinProject(scanner, currentUser);
                     break;
                 case 7:
-                    showNewsAndNotifications();
+                    showNewsAndNotifications(currentUser);
                     break;
                 case 0:
                     return;
@@ -71,8 +71,8 @@ public final class ResearchApp {
         System.out.println(I18n.f("created.journal", journal));
     }
 
-    private static void publishPaper(Scanner scanner) {
-        ResearcherProfile researcher = AppData.firstResearcherProfile();
+    private static void publishPaper(Scanner scanner, User currentUser) {
+        ResearcherProfile researcher = currentUser.getResearcherProfile();
         Journal journal = AppData.firstJournal();
         if (researcher == null) {
             System.out.println(I18n.t("no.researcher"));
@@ -94,8 +94,8 @@ public final class ResearchApp {
         System.out.println(p1.getCitation(Format.BIBTEX));
     }
 
-    private static void showHIndex() {
-        ResearcherProfile researcher = AppData.firstResearcherProfile();
+    private static void showHIndex(User currentUser) {
+        ResearcherProfile researcher = currentUser.getResearcherProfile();
         if (researcher == null) {
             System.out.println(I18n.t("no.researcher"));
             return;
@@ -130,8 +130,8 @@ public final class ResearchApp {
         System.out.println(I18n.f("supervisor.assigned", researcher.getResearcherName()));
     }
 
-    private static void joinProject(Scanner scanner) {
-        ResearcherProfile researcher = AppData.firstResearcherProfile();
+    private static void joinProject(Scanner scanner, User currentUser) {
+        ResearcherProfile researcher = currentUser.getResearcherProfile();
         if (researcher == null) {
             System.out.println(I18n.t("no.researcher"));
             return;
@@ -144,7 +144,7 @@ public final class ResearchApp {
         System.out.println(project);
     }
 
-    private static void showNewsAndNotifications() {
+    private static void showNewsAndNotifications(User currentUser) {
         System.out.println(I18n.t("news"));
         if (University.getInstance().getNewsService().getFeed().isEmpty()) {
             System.out.println(I18n.t("no.news"));
@@ -152,10 +152,7 @@ public final class ResearchApp {
         for (university.news.NewsItem item : University.getInstance().getNewsService().getFeed()) {
             System.out.println(item);
         }
-        university.users.Student student = AppData.firstStudent();
-        if (student != null) {
-            System.out.println(I18n.f("student.notifications", student.getNotifications()));
-        }
+        System.out.println(I18n.f("student.notifications", currentUser.getNotifications()));
     }
 
     private static ResearchPaper paper(String id, String title, int citations, int pages, int year, String doi) {

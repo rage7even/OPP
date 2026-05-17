@@ -286,16 +286,21 @@ class Session {
 
 interface UserRepository {
   +findByEmail(email: String): User
+  +findById(userId: String): User
   +save(u: User): void
   +remove(userId: String): void
   +findAll(): List~User~
 }
+
+class InMemoryUserRepository
 
 class AuthService {
   -userRepo: UserRepository
   +login(email: String, password: String): Session
   +logout(session: Session): void
 }
+
+UserRepository <|.. InMemoryUserRepository
 
 interface UniversityDataStore {
   +save(university: University): void
@@ -370,6 +375,7 @@ class Manager extends Employee {
   -managerType: ManagerType
   +assignCourseToTeacher(course: Course, lessonType: LessonType, teacher: Teacher): void
   +approveStudentRegistration(enrollment: Enrollment): void
+  +rejectStudentRegistration(enrollment: Enrollment): void
   +addCourseForRegistration(course: Course, major: String, year: int): CourseOffering
   +createStatisticalReport(): StatisticalReport
   +manageNews(): void
@@ -448,6 +454,7 @@ class Mark {
 class CourseRegistrationService {
   +register(student: Student, offering: CourseOffering): Enrollment throws CreditLimitExceededException, TooManyFailsException, CourseNotAvailableException, PrerequisiteNotMetException
   +approve(manager: Manager, enrollment: Enrollment): void
+  +reject(manager: Manager, enrollment: Enrollment): void
 }
 
 CourseRegistrationService ..> CreditLimitExceededException

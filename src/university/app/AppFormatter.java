@@ -1,6 +1,7 @@
 ﻿package university.app;
 
 import university.education.Course;
+import university.education.CourseOffering;
 import university.education.Enrollment;
 import university.education.Mark;
 import university.support.SupportRequest;
@@ -15,10 +16,18 @@ public final class AppFormatter {
                 + ", " + I18n.courseType(course.getType()) + ")";
     }
 
+    public static String offering(CourseOffering offering) {
+        return offering.getOfferingId() + " - " + course(offering.getCourse())
+                + ", " + I18n.t("major") + ": " + offering.getMajor()
+                + ", " + I18n.t("year") + ": " + offering.getYear();
+    }
+
     public static String enrollment(Enrollment enrollment) {
         StringBuilder sb = new StringBuilder();
         sb.append(enrollment.getEnrollmentId())
                 .append(" - ")
+                .append(enrollment.getStudent().getName())
+                .append(", ")
                 .append(enrollment.getOffering().getCourse().getName())
                 .append(", ")
                 .append(I18n.t("status"))
