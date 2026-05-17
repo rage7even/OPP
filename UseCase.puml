@@ -1,0 +1,409 @@
+@startuml UniversityResearchSystem_UseCase_Complex
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam shadowing false
+skinparam usecase {
+  BackgroundColor White
+  BorderColor Black
+}
+skinparam rectangle {
+  BorderColor Black
+}
+
+' ===================== ACTORS =====================
+
+actor "User" as User
+actor "Student" as Student
+actor "Graduate Student" as GraduateStudent
+actor "Employee" as Employee
+actor "Teacher" as Teacher
+actor "Professor" as Professor
+actor "Manager / Dean Office" as Manager
+actor "Admin" as Admin
+actor "Tech Support Specialist" as TechSupport
+actor "Researcher\n(role)" as Researcher
+actor "System Timer" as Timer
+
+' ===================== ACTOR GENERALIZATION =====================
+
+User <|-- Student
+Student <|-- GraduateStudent
+
+User <|-- Employee
+Employee <|-- Teacher
+Employee <|-- Manager
+Employee <|-- Admin
+Employee <|-- TechSupport
+
+Teacher <|-- Professor
+
+Researcher <|-- Professor
+Researcher <|-- GraduateStudent
+
+note right of Researcher
+Researcher is a role.
+Teachers and students CAN be researchers.
+Professors and Graduate Students
+are always researchers.
+end note
+
+' ===================== SYSTEM BOUNDARY =====================
+
+rectangle "University Research System" {
+
+  ' ===================== AUTHENTICATION =====================
+
+  package "Authentication & Common User Features" {
+    usecase "Login" as UC_Login
+    usecase "Logout" as UC_Logout
+    usecase "Change Language\n(KZ / EN / RU)" as UC_ChangeLanguage
+    usecase "View Profile" as UC_ViewProfile
+    usecase "Create Support Request" as UC_CreateSupportRequest
+    usecase "View News Feed" as UC_ViewNews
+    usecase "Comment News" as UC_CommentNews
+  }
+
+  ' ===================== COURSES / STUDENT =====================
+
+  package "Student Course Registration" {
+    usecase "View Available Courses" as UC_ViewCourses
+    usecase "Register for Course" as UC_RegisterCourse
+    usecase "Check Credit Limit\n(max 21 credits)" as UC_CheckCredits
+    usecase "Check Fail Count\n(max 3 fails)" as UC_CheckFails
+    usecase "Check Course Availability" as UC_CheckCourseAvailability
+    usecase "Check Prerequisites" as UC_CheckPrerequisites
+    usecase "Create Pending Enrollment" as UC_CreateEnrollment
+    usecase "View Registration Status" as UC_ViewRegistrationStatus
+  }
+
+  package "Student Academic Features" {
+    usecase "View Marks" as UC_ViewMarks
+    usecase "View Transcript" as UC_ViewTranscript
+    usecase "View Teachers of Course" as UC_ViewTeachers
+    usecase "View Teacher by Lesson Type\n(lecture/practice)" as UC_ViewTeacherByLesson
+    usecase "Rate Teacher" as UC_RateTeacher
+    usecase "Validate Rating" as UC_ValidateRating
+  }
+
+  package "Student Organizations" {
+    usecase "Join Student Organization" as UC_JoinOrg
+    usecase "Leave Student Organization" as UC_LeaveOrg
+    usecase "Manage Organization Members" as UC_ManageOrgMembers
+    usecase "Assign Organization Head" as UC_AssignOrgHead
+  }
+
+  ' ===================== TEACHER =====================
+
+  package "Teacher Course Management" {
+    usecase "View My Courses" as UC_TeacherViewCourses
+    usecase "Manage Course" as UC_ManageCourse
+    usecase "View Students in Course" as UC_ViewStudentsInCourse
+    usecase "Put Mark" as UC_PutMark
+    usecase "Validate Mark" as UC_ValidateMark
+    usecase "Update Student Record" as UC_UpdateStudentRecord
+    usecase "Send Complaint to Dean" as UC_SendComplaint
+    usecase "Select Urgency Level\nLOW / MEDIUM / HIGH" as UC_SelectUrgency
+  }
+
+  ' ===================== EMPLOYEE =====================
+
+  package "Employee Communication" {
+    usecase "Send Message to Employee" as UC_SendMessage
+    usecase "Create Official Request" as UC_CreateOfficialRequest
+  }
+
+  ' ===================== MANAGER =====================
+
+  package "Manager / Dean Office Features" {
+    usecase "Add Course for Registration" as UC_AddCourseOffering
+    usecase "Assign Course to Teacher" as UC_AssignCourseTeacher
+    usecase "Choose Lesson Type\nLecture / Practice" as UC_ChooseLessonType
+    usecase "Approve Student Registration" as UC_ApproveRegistration
+    usecase "Reject Student Registration" as UC_RejectRegistration
+    usecase "View Students Sorted" as UC_ViewStudentsSorted
+    usecase "Sort Students by GPA / Name" as UC_SortStudents
+    usecase "View Teachers Sorted" as UC_ViewTeachersSorted
+    usecase "Sort Teachers by Rating / Name" as UC_SortTeachers
+    usecase "Create Academic Report" as UC_CreateAcademicReport
+    usecase "View Official Requests" as UC_ViewOfficialRequests
+    usecase "Sign Official Request" as UC_SignOfficialRequest
+    usecase "Reject Official Request" as UC_RejectOfficialRequest
+    usecase "Assign Research Supervisor" as UC_AssignSupervisor
+    usecase "Check Supervisor H-index" as UC_CheckSupervisorHIndex
+  }
+
+  ' ===================== ADMIN =====================
+
+  package "Admin Features" {
+    usecase "Manage Users" as UC_ManageUsers
+    usecase "Add User" as UC_AddUser
+    usecase "Update User" as UC_UpdateUser
+    usecase "Remove User" as UC_RemoveUser
+    usecase "View Log Files" as UC_ViewLogs
+    usecase "Save System Data" as UC_SaveData
+    usecase "Load System Data" as UC_LoadData
+  }
+
+  ' ===================== TECH SUPPORT =====================
+
+  package "Tech Support" {
+    usecase "View New Support Requests" as UC_ViewSupportRequests
+    usecase "Mark Request as VIEWED" as UC_MarkViewed
+    usecase "Accept Support Request" as UC_AcceptRequest
+    usecase "Reject Support Request" as UC_RejectRequest
+    usecase "Mark Request as DONE" as UC_MarkDone
+    usecase "Assign Request to Specialist" as UC_AssignSupportRequest
+  }
+
+  ' ===================== RESEARCH =====================
+
+  package "Research Features" {
+    usecase "Create / Manage Research Profile" as UC_ManageResearchProfile
+    usecase "Calculate H-index" as UC_CalculateHIndex
+    usecase "Publish Research Paper" as UC_PublishPaper
+    usecase "Add Paper to Journal" as UC_AddPaperToJournal
+    usecase "Get Citation\nPlain Text / BibTeX" as UC_GetCitation
+    usecase "Print Own Papers" as UC_PrintOwnPapers
+    usecase "Print All University Papers" as UC_PrintAllPapers
+    usecase "Sort Papers\nby date / citations / pages" as UC_SortPapers
+    usecase "Create Research Project" as UC_CreateResearchProject
+    usecase "Join Research Project" as UC_JoinResearchProject
+    usecase "Check Researcher Role" as UC_CheckResearcherRole
+    usecase "Add Diploma Project Paper" as UC_AddDiplomaProject
+    usecase "View Diploma Projects" as UC_ViewDiplomaProjects
+  }
+
+  ' ===================== NEWS / JOURNALS =====================
+
+  package "News & Journals" {
+    usecase "Manage News" as UC_ManageNews
+    usecase "Create General News" as UC_CreateGeneralNews
+    usecase "Create Research News" as UC_CreateResearchNews
+    usecase "Pin Research News" as UC_PinResearchNews
+    usecase "Generate Research Announcement" as UC_GenerateResearchAnnouncement
+    usecase "Generate Top Cited Researcher News" as UC_GenerateTopResearcherNews
+    usecase "Find Top Cited Researcher\nby school and year" as UC_FindTopResearcher
+    usecase "Subscribe to Journal" as UC_SubscribeJournal
+    usecase "Unsubscribe from Journal" as UC_UnsubscribeJournal
+    usecase "View Journal Papers" as UC_ViewJournalPapers
+    usecase "Notify Subscribers\nabout new paper" as UC_NotifySubscribers
+    usecase "Receive New Paper Notification" as UC_ReceiveNotification
+  }
+}
+
+' ===================== COMMON ACTOR CONNECTIONS =====================
+
+User --> UC_Login
+User --> UC_Logout
+User --> UC_ChangeLanguage
+User --> UC_ViewProfile
+User --> UC_CreateSupportRequest
+User --> UC_ViewNews
+User --> UC_CommentNews
+User --> UC_SubscribeJournal
+User --> UC_UnsubscribeJournal
+User --> UC_ViewJournalPapers
+User --> UC_ReceiveNotification
+
+' ===================== STUDENT CONNECTIONS =====================
+
+Student --> UC_ViewCourses
+Student --> UC_RegisterCourse
+Student --> UC_ViewRegistrationStatus
+Student --> UC_ViewMarks
+Student --> UC_ViewTranscript
+Student --> UC_ViewTeachers
+Student --> UC_ViewTeacherByLesson
+Student --> UC_RateTeacher
+Student --> UC_JoinOrg
+Student --> UC_LeaveOrg
+
+GraduateStudent --> UC_ViewDiplomaProjects
+GraduateStudent --> UC_AddDiplomaProject
+GraduateStudent --> UC_AssignSupervisor
+
+' ===================== EMPLOYEE CONNECTIONS =====================
+
+Employee --> UC_SendMessage
+Employee --> UC_CreateOfficialRequest
+
+' ===================== TEACHER CONNECTIONS =====================
+
+Teacher --> UC_TeacherViewCourses
+Teacher --> UC_ManageCourse
+Teacher --> UC_ViewStudentsInCourse
+Teacher --> UC_PutMark
+Teacher --> UC_SendComplaint
+
+' ===================== MANAGER CONNECTIONS =====================
+
+Manager --> UC_AddCourseOffering
+Manager --> UC_AssignCourseTeacher
+Manager --> UC_ApproveRegistration
+Manager --> UC_RejectRegistration
+Manager --> UC_ViewStudentsSorted
+Manager --> UC_ViewTeachersSorted
+Manager --> UC_CreateAcademicReport
+Manager --> UC_ViewOfficialRequests
+Manager --> UC_SignOfficialRequest
+Manager --> UC_RejectOfficialRequest
+Manager --> UC_ManageNews
+Manager --> UC_AssignSupervisor
+Manager --> UC_AssignSupportRequest
+
+' ===================== ADMIN CONNECTIONS =====================
+
+Admin --> UC_ManageUsers
+Admin --> UC_ViewLogs
+Admin --> UC_SaveData
+Admin --> UC_LoadData
+
+' ===================== TECH SUPPORT CONNECTIONS =====================
+
+TechSupport --> UC_ViewSupportRequests
+TechSupport --> UC_MarkViewed
+TechSupport --> UC_AcceptRequest
+TechSupport --> UC_RejectRequest
+TechSupport --> UC_MarkDone
+
+' ===================== RESEARCHER CONNECTIONS =====================
+
+Researcher --> UC_ManageResearchProfile
+Researcher --> UC_CalculateHIndex
+Researcher --> UC_PublishPaper
+Researcher --> UC_GetCitation
+Researcher --> UC_PrintOwnPapers
+Researcher --> UC_PrintAllPapers
+Researcher --> UC_CreateResearchProject
+Researcher --> UC_JoinResearchProject
+
+Timer --> UC_GenerateTopResearcherNews
+
+' ===================== INCLUDE / EXTEND: AUTH NOTE =====================
+
+note bottom of UC_Login
+All main system actions require
+an authenticated Session.
+end note
+
+' ===================== INCLUDE / EXTEND: COURSE REGISTRATION =====================
+
+UC_RegisterCourse ..> UC_CheckCredits : <<include>>
+UC_RegisterCourse ..> UC_CheckFails : <<include>>
+UC_RegisterCourse ..> UC_CheckCourseAvailability : <<include>>
+UC_RegisterCourse ..> UC_CheckPrerequisites : <<include>>
+UC_RegisterCourse ..> UC_CreateEnrollment : <<include>>
+
+UC_ApproveRegistration ..> UC_ViewRegistrationStatus : <<include>>
+UC_RejectRegistration ..> UC_ViewRegistrationStatus : <<include>>
+
+' ===================== INCLUDE / EXTEND: MARKS =====================
+
+UC_PutMark ..> UC_ValidateMark : <<include>>
+UC_PutMark ..> UC_UpdateStudentRecord : <<include>>
+UC_ViewTranscript ..> UC_ViewMarks : <<include>>
+UC_RateTeacher ..> UC_ValidateRating : <<include>>
+
+' ===================== INCLUDE / EXTEND: TEACHER =====================
+
+UC_SendComplaint ..> UC_SelectUrgency : <<include>>
+UC_ManageCourse ..> UC_ViewStudentsInCourse : <<include>>
+
+' ===================== INCLUDE / EXTEND: MANAGER =====================
+
+UC_AssignCourseTeacher ..> UC_ChooseLessonType : <<include>>
+UC_ViewStudentsSorted ..> UC_SortStudents : <<include>>
+UC_ViewTeachersSorted ..> UC_SortTeachers : <<include>>
+
+UC_AssignSupervisor ..> UC_CheckSupervisorHIndex : <<include>>
+UC_AssignSupervisor ..> UC_CalculateHIndex : <<include>>
+
+note right of UC_AssignSupervisor
+If supervisor h-index < 3,
+LowHIndexException is thrown.
+end note
+
+' ===================== INCLUDE / EXTEND: ADMIN =====================
+
+UC_ManageUsers ..> UC_AddUser : <<include>>
+UC_ManageUsers ..> UC_UpdateUser : <<include>>
+UC_ManageUsers ..> UC_RemoveUser : <<include>>
+
+' ===================== INCLUDE / EXTEND: TECH SUPPORT =====================
+
+UC_ViewSupportRequests ..> UC_MarkViewed : <<include>>
+UC_AcceptRequest ..> UC_ViewSupportRequests : <<include>>
+UC_RejectRequest ..> UC_ViewSupportRequests : <<include>>
+UC_MarkDone ..> UC_AcceptRequest : <<include>>
+
+' ===================== INCLUDE / EXTEND: RESEARCH =====================
+
+UC_PublishPaper ..> UC_AddPaperToJournal : <<include>>
+UC_PublishPaper ..> UC_GenerateResearchAnnouncement : <<include>>
+UC_PublishPaper ..> UC_NotifySubscribers : <<include>>
+
+UC_GetCitation ..> UC_PublishPaper : <<extend>>
+
+UC_PrintOwnPapers ..> UC_SortPapers : <<include>>
+UC_PrintAllPapers ..> UC_SortPapers : <<include>>
+
+UC_JoinResearchProject ..> UC_CheckResearcherRole : <<include>>
+
+note right of UC_JoinResearchProject
+If user has no ResearcherProfile,
+NotResearcherException is thrown.
+end note
+
+UC_AddDiplomaProject ..> UC_PublishPaper : <<extend>>
+
+' ===================== INCLUDE / EXTEND: NEWS / JOURNALS =====================
+
+UC_ManageNews ..> UC_CreateGeneralNews : <<include>>
+UC_ManageNews ..> UC_CreateResearchNews : <<include>>
+UC_CreateResearchNews ..> UC_PinResearchNews : <<include>>
+
+UC_GenerateResearchAnnouncement ..> UC_CreateResearchNews : <<include>>
+UC_GenerateResearchAnnouncement ..> UC_PinResearchNews : <<include>>
+
+UC_GenerateTopResearcherNews ..> UC_FindTopResearcher : <<include>>
+UC_GenerateTopResearcherNews ..> UC_CreateResearchNews : <<include>>
+UC_GenerateTopResearcherNews ..> UC_PinResearchNews : <<include>>
+
+UC_FindTopResearcher ..> UC_CalculateHIndex : <<include>>
+
+UC_SubscribeJournal ..> UC_ReceiveNotification : <<extend>>
+UC_AddPaperToJournal ..> UC_NotifySubscribers : <<include>>
+UC_NotifySubscribers ..> UC_ReceiveNotification : <<include>>
+
+' ===================== NOTES =====================
+
+note top of UC_RegisterCourse
+Business rules:
+1) Student credits must not exceed 21.
+2) Student fail count must not exceed 3.
+3) Course must be available.
+4) Prerequisites must be satisfied.
+end note
+
+note bottom of UC_PublishPaper
+Publishing a paper triggers:
+- saving paper in journal
+- notifying subscribers
+- creating pinned research news
+end note
+
+note bottom of UC_ManageNews
+Research news has higher priority
+and is pinned using Decorator logic.
+end note
+
+note bottom of UC_SubscribeJournal
+Journal notification follows
+Observer pattern:
+Journal = Subject,
+User / NewsService / NotificationService = Observers.
+end note
+
+@enduml

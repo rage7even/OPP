@@ -1,0 +1,789 @@
+@startuml UniversityResearchSystem_ClassDiagram_Combined
+skinparam style strictuml
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide circle
+
+' ===================== ENUMERATIONS =====================
+enum Language {
+  KZ
+  EN
+  RU
+}
+
+enum TeacherPosition {
+  TUTOR
+  LECTOR
+  SENIOR_LECTOR
+  PROFESSOR
+}
+
+enum CourseType {
+  MAJOR
+  MINOR
+  FREE_ELECTIVE
+}
+
+enum LessonType {
+  LECTURE
+  PRACTICE
+}
+
+enum Urgency {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum RequestStatus {
+  NEW
+  VIEWED
+  ACCEPTED
+  REJECTED
+  DONE
+}
+
+enum DegreeType {
+  MASTER
+  PHD
+}
+
+enum ManagerType {
+  OR
+  DEPARTMENT
+  DEAN_OFFICE
+}
+
+enum Format {
+  PLAIN_TEXT
+  BIBTEX
+}
+
+enum NewsTopic {
+  RESEARCH
+  GENERAL
+}
+
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum UserRole {
+  STUDENT
+  GRADUATE_STUDENT
+  TEACHER
+  MANAGER
+  ADMIN
+  TECH_SUPPORT
+}
+
+' ===================== EXCEPTIONS =====================
+class UniversityException <<exception>> {
+  -message: String
+  +UniversityException(message: String)
+  +getMessage(): String
+}
+
+class LowHIndexException <<exception>> {
+  -hIndex: int
+  +LowHIndexException(hIndex: int)
+}
+
+class NotResearcherException <<exception>> {
+  +NotResearcherException(userId: String)
+}
+
+class CreditLimitExceededException <<exception>> {
+  +CreditLimitExceededException(currentCredits: int, attempted: int)
+}
+
+class TooManyFailsException <<exception>> {
+  +TooManyFailsException(failCount: int)
+}
+
+class CourseNotAvailableException <<exception>> {
+  +CourseNotAvailableException(courseId: String)
+}
+
+class PrerequisiteNotMetException <<exception>> {
+  +PrerequisiteNotMetException(courseId: String)
+}
+
+class InvalidRatingException <<exception>> {
+  +InvalidRatingException(value: int)
+}
+
+class DuplicateSubscriptionException <<exception>> {
+  +DuplicateSubscriptionException(journalId: String)
+}
+
+class DuplicateParticipantException <<exception>> {
+  +DuplicateParticipantException(projectId: String)
+}
+
+class UnauthorizedActionException <<exception>> {
+  +UnauthorizedActionException(action: String)
+}
+
+class AlreadyResearcherException <<exception>> {
+  +AlreadyResearcherException(userId: String)
+}
+
+UniversityException <|-- LowHIndexException
+UniversityException <|-- NotResearcherException
+UniversityException <|-- CreditLimitExceededException
+UniversityException <|-- TooManyFailsException
+UniversityException <|-- CourseNotAvailableException
+UniversityException <|-- PrerequisiteNotMetException
+UniversityException <|-- InvalidRatingException
+UniversityException <|-- DuplicateSubscriptionException
+UniversityException <|-- DuplicateParticipantException
+UniversityException <|-- UnauthorizedActionException
+UniversityException <|-- AlreadyResearcherException
+
+' ===================== OBSERVER =====================
+interface Observer {
+  +update(paper: ResearchPaper): void
+}
+
+interface Subject {
+  +subscribe(o: Observer): void
+  +unsubscribe(o: Observer): void
+  +notifyObservers(paper: ResearchPaper): void
+}
+
+' ===================== STRATEGY =====================
+interface PaperSortStrategy {
+  +compare(a: ResearchPaper, b: ResearchPaper): int
+  +name(): String
+}
+
+class SortByDateStrategy
+class SortByCitationsStrategy
+class SortByPagesStrategy
+
+PaperSortStrategy <|.. SortByDateStrategy
+PaperSortStrategy <|.. SortByCitationsStrategy
+PaperSortStrategy <|.. SortByPagesStrategy
+
+interface StudentSortStrategy {
+  +compare(a: Student, b: Student): int
+}
+
+interface TeacherSortStrategy {
+  +compare(a: Teacher, b: Teacher): int
+}
+
+class SortStudentByGpaStrategy
+class SortStudentByNameStrategy
+class SortTeacherByRatingStrategy
+class SortTeacherByNameStrategy
+
+StudentSortStrategy <|.. SortStudentByGpaStrategy
+StudentSortStrategy <|.. SortStudentByNameStrategy
+TeacherSortStrategy <|.. SortTeacherByRatingStrategy
+TeacherSortStrategy <|.. SortTeacherByNameStrategy
+
+interface CitationFormatter {
+  +format(paper: ResearchPaper): String
+}
+
+class PlainTextCitationFormatter
+class BibtexCitationFormatter
+
+CitationFormatter <|.. PlainTextCitationFormatter
+CitationFormatter <|.. BibtexCitationFormatter
+
+' ===================== FACTORY =====================
+class CitationFormatterFactory {
+  +create(format: Format): CitationFormatter
+}
+
+interface UserFactory {
+  +create(role: UserRole, id: String, name: String, email: String, passwordHash: String): User
+}
+
+class DefaultUserFactory
+UserFactory <|.. DefaultUserFactory
+
+' ===================== DECORATOR =====================
+interface NewsItem {
+  +getTitle(): String
+  +getContent(): String
+  +getTopic(): NewsTopic
+  +isPinned(): boolean
+  +getPriority(): int
+  +addComment(author: User, text: String): void
+  +getComments(): List~Comment~
+}
+
+class News implements NewsItem {
+  -newsId: String
+  -title: String
+  -content: String
+  -topic: NewsTopic
+  -comments: List~Comment~
+  +isPinned(): boolean
+  +getPriority(): int
+}
+
+abstract class NewsDecorator implements NewsItem {
+  -wrappee: NewsItem
+}
+
+class PinnedNewsDecorator extends NewsDecorator {
+  +isPinned(): boolean
+  +getPriority(): int
+}
+
+NewsItem <|.. NewsDecorator
+NewsDecorator <|-- PinnedNewsDecorator
+
+class Comment {
+  -commentId: String
+  -author: User
+  -content: String
+  -date: Date
+  +toString(): String
+}
+
+' ===================== SINGLETON =====================
+class University <<singleton>> {
+  -users: List~User~
+  -courses: List~Course~
+  -courseOfferings: List~CourseOffering~
+  -journals: List~Journal~
+  -newsFeed: List~NewsItem~
+  -supportRequests: List~SupportRequest~
+
+  -authService: AuthService
+  -registrationService: CourseRegistrationService
+  -newsService: NewsService
+  -supportDesk: SupportDeskService
+  -dataStore: UniversityDataStore
+  -logService: LogService
+  -researchService: ResearchService
+  -journalService: JournalService
+  -notificationService: NotificationService
+  -reportService: ReportService
+  -userManagementService: UserManagementService
+
+  +save(): void
+  +load(): void
+}
+University : {static} -instance : University
+University : {static} +getInstance() : University
+
+' ===================== AUTH / STORAGE =====================
+class Session {
+  -sessionId: String
+  -user: User
+  -issuedAt: Date
+  +getUser(): User
+}
+
+interface UserRepository {
+  +findByEmail(email: String): User
+  +save(u: User): void
+  +remove(userId: String): void
+  +findAll(): List~User~
+}
+
+class AuthService {
+  -userRepo: UserRepository
+  +login(email: String, password: String): Session
+  +logout(session: Session): void
+}
+
+interface UniversityDataStore {
+  +save(university: University): void
+  +load(): University
+}
+
+class FileUniversityDataStore {
+  -path: String
+}
+
+UniversityDataStore <|.. FileUniversityDataStore
+
+' ===================== USERS =====================
+abstract class User {
+  -id: String
+  -name: String
+  -email: String
+  -passwordHash: String
+  -language: Language
+
+  +changeLanguage(lang: Language): void
+  +subscribeToJournal(j: Journal): void
+  +unsubscribeFromJournal(j: Journal): void
+  +update(paper: ResearchPaper): void
+  +equals(o: Object): boolean
+  +hashCode(): int
+  +toString(): String
+}
+Observer <|.. User
+
+abstract class Employee extends User {
+  -employeeId: String
+  -salary: double
+  +sendMessage(to: Employee, text: String): Message
+}
+
+class Student extends User {
+  -studentId: String
+  -gpa: double
+  -credits: int
+  -failCount: int
+  -enrollments: List~Enrollment~
+  -organizations: List~StudentOrganization~
+
+  +registerCourse(offering: CourseOffering): Enrollment
+  +viewMarks(): List~Mark~
+  +viewTeachers(course: Course): List~Teacher~
+  +viewTeacherInfo(course: Course, lessonType: LessonType): Teacher
+  +getTranscript(): String
+  +rateTeacher(t: Teacher, rating: int): void
+  +recordFail(): void throws TooManyFailsException
+}
+
+class GraduateStudent extends Student {
+  -degree: DegreeType
+  -supervisor: Researcher
+  -diplomaProjects: List~ResearchPaper~
+  +assignSupervisor(r: Researcher): void throws LowHIndexException
+}
+
+class Teacher extends Employee {
+  -position: TeacherPosition
+  -courses: List~Course~
+  +viewCourses(): List~Course~
+  +putMark(enrollment: Enrollment, mark: Mark): void
+  +sendComplaint(dean: Manager, students: List~Student~, urgency: Urgency, text: String): Complaint
+  +viewStudents(course: Course): List~Student~
+  +getAverageRating(): double
+}
+
+class Manager extends Employee {
+  -managerType: ManagerType
+  +assignCourseToTeacher(course: Course, lessonType: LessonType, teacher: Teacher): void
+  +approveStudentRegistration(enrollment: Enrollment): void
+  +addCourseForRegistration(course: Course, major: String, year: int): CourseOffering
+  +createStatisticalReport(): StatisticalReport
+  +manageNews(): void
+  +viewStudents(strategy: StudentSortStrategy): List~Student~
+  +viewTeachers(strategy: TeacherSortStrategy): List~Teacher~
+  +viewOfficialRequests(): List~OfficialRequest~
+}
+
+class Admin extends Employee {
+  +addUser(u: User): void
+  +removeUser(userId: String): void
+  +updateUser(u: User): void
+  +viewLogFiles(): List~LogEntry~
+}
+
+class TechSupportSpecialist extends Employee {
+  +viewRequests(): List~SupportRequest~
+  +acceptRequest(r: SupportRequest): void
+  +rejectRequest(r: SupportRequest): void
+  +markDone(r: SupportRequest): void
+}
+
+User <|-- Employee
+User <|-- Student
+Student <|-- GraduateStudent
+Employee <|-- Teacher
+Employee <|-- Manager
+Employee <|-- Admin
+Employee <|-- TechSupportSpecialist
+
+' ===================== EDUCATION =====================
+class Course {
+  -courseId: String
+  -name: String
+  -credits: int
+  -type: CourseType
+  -capacity: int
+  -prerequisites: List~Course~
+  -lessons: List~Lesson~
+  +isAvailable(): boolean
+  +hasPrerequisitesFor(s: Student): boolean
+}
+
+class Lesson {
+  -type: LessonType
+  -dateTime: Date
+  -instructor: Teacher
+}
+
+class CourseOffering {
+  -offeringId: String
+  -course: Course
+  -major: String
+  -year: int
+}
+
+class Enrollment {
+  -enrollmentId: String
+  -student: Student
+  -offering: CourseOffering
+  -status: RegistrationStatus
+  -mark: Mark
+  +approve(): void
+  +reject(): void
+  +setMark(mark: Mark): void
+}
+
+class Mark {
+  -attestation1: double
+  -attestation2: double
+  -finalExam: double
+  +getFinalGrade(): double
+  +toString(): String
+}
+
+class CourseRegistrationService {
+  +register(student: Student, offering: CourseOffering): Enrollment throws CreditLimitExceededException, TooManyFailsException, CourseNotAvailableException, PrerequisiteNotMetException
+  +approve(manager: Manager, enrollment: Enrollment): void
+}
+
+CourseRegistrationService ..> CreditLimitExceededException
+CourseRegistrationService ..> CourseNotAvailableException
+CourseRegistrationService ..> PrerequisiteNotMetException
+CourseRegistrationService ..> TooManyFailsException
+Student ..> TooManyFailsException
+
+' ===================== RESEARCH =====================
+interface Researcher {
+  +calculateHIndex(): int
+  +printPapers(strategy: PaperSortStrategy): void
+  +getPapers(): List~ResearchPaper~
+  +publishPaper(paper: ResearchPaper, journal: Journal): void
+}
+
+class ResearcherProfile {
+  -profileId: String
+  -owner: User
+  -school: String
+  -papers: List~ResearchPaper~
+  -projects: List~ResearchProject~
+  +calculateHIndex(): int
+  +printPapers(strategy: PaperSortStrategy): void
+  +getPapers(): List~ResearchPaper~
+  +publishPaper(paper: ResearchPaper, journal: Journal): void
+}
+Researcher <|.. ResearcherProfile
+
+class ResearchPaper {
+  -paperId: String
+  -title: String
+  -authors: List~Researcher~
+  -journal: Journal
+  -citations: int
+  -pages: int
+  -publishedAt: Date
+  -doi: String
+  +getCitation(format: Format): String
+  +equals(o: Object): boolean
+  +hashCode(): int
+  +toString(): String
+}
+
+class ResearchProject {
+  -projectId: String
+  -topic: String
+  -papers: List~ResearchPaper~
+  -participants: List~Researcher~
+  +addParticipant(r: Researcher): void throws DuplicateParticipantException
+}
+
+class Journal {
+  -journalId: String
+  -title: String
+  -subscribers: List~Observer~
+  -papers: List~ResearchPaper~
+  +subscribe(o: Observer): void
+  +unsubscribe(o: Observer): void
+  +notifyObservers(paper: ResearchPaper): void
+  +publishPaper(p: ResearchPaper): void
+  +getPapers(): List~ResearchPaper~
+}
+Subject <|.. Journal
+
+ResearchProject ..> DuplicateParticipantException
+GraduateStudent ..> LowHIndexException
+ResearchPaper ..> CitationFormatterFactory
+
+class NewsService {
+  -feed: List~NewsItem~
+  +update(paper: ResearchPaper): void
+  +generateResearchAnnouncement(paper: ResearchPaper): NewsItem
+  +generateTopCitedResearcherNews(school: String, year: int): NewsItem
+}
+Observer <|.. NewsService
+
+' ===================== SERVICES =====================
+class ResearchService {
+  +assignSupervisor(student: GraduateStudent, supervisor: Researcher): void throws LowHIndexException
+  +joinProject(user: User, project: ResearchProject): void throws NotResearcherException, DuplicateParticipantException
+  +getTopCitedResearcher(school: String, year: int): ResearcherProfile
+  +printAllResearchPapers(strategy: PaperSortStrategy): void
+}
+
+ResearchService ..> LowHIndexException
+ResearchService ..> NotResearcherException
+ResearchService ..> DuplicateParticipantException
+
+class JournalService {
+  +subscribe(user: User, journal: Journal): void
+  +unsubscribe(user: User, journal: Journal): void
+  +publishPaper(author: Researcher, paper: ResearchPaper, journal: Journal): void
+}
+
+class NotificationService {
+  +update(paper: ResearchPaper): void
+  +notifyNewPaper(paper: ResearchPaper): void
+  +notifyTopResearcher(school: String, year: int): void
+}
+
+Observer <|.. NotificationService
+
+class ReportService {
+  +createAcademicReport(): StatisticalReport
+  +createTeacherRatingReport(teacher: Teacher): StatisticalReport
+}
+
+class UserManagementService {
+  +addUser(u: User): void
+  +removeUser(userId: String): void
+  +updateUser(u: User): void
+}
+
+JournalService ..> DuplicateSubscriptionException
+
+' ===================== STUDENT ORG + RATING =====================
+class StudentOrganization {
+  -orgId: String
+  -name: String
+  -description: String
+  -members: List~Student~
+  -head: Student
+  +addMember(s: Student): void
+  +removeMember(s: Student): void
+  +assignHead(s: Student): void
+}
+
+class TeacherRating {
+  -ratingId: String
+  -author: Student
+  -teacher: Teacher
+  -value: int
+  -date: Date
+  +validate(): void
+}
+
+TeacherRating ..> InvalidRatingException
+
+' ===================== MESSAGING / REQUESTS / LOGS =====================
+class Message {
+  -messageId: String
+  -sender: Employee
+  -receiver: Employee
+  -content: String
+  -date: Date
+}
+
+class Complaint {
+  -complaintId: String
+  -sender: Teacher
+  -dean: Manager
+  -students: List~Student~
+  -urgency: Urgency
+  -text: String
+  -date: Date
+}
+
+class SupportRequest {
+  -requestId: String
+  -createdBy: User
+  -assignedTo: TechSupportSpecialist
+  -description: String
+  -status: RequestStatus
+  +assignTo(s: TechSupportSpecialist): void
+  +markViewed(): void
+  +accept(): void
+  +reject(): void
+  +done(): void
+}
+
+SupportRequest ..> UnauthorizedActionException
+
+class OfficialRequest {
+  -requestId: String
+  -createdBy: Employee
+  -signedBy: Manager
+  -description: String
+  -date: Date
+}
+
+class SupportDeskService {
+  +createRequest(createdBy: User, description: String): SupportRequest
+  +assignToSpecialist(r: SupportRequest, s: TechSupportSpecialist): void
+}
+
+class StatisticalReport {
+  -createdAt: Date
+  -content: String
+}
+
+class LogEntry {
+  -timestamp: Date
+  -userId: String
+  -action: String
+}
+
+class LogService {
+  -entries: List~LogEntry~
+  +log(user: User, action: String): void
+  +getEntries(): List~LogEntry~
+}
+
+' ===================== ASSOCIATIONS =====================
+University "1" o-- "0..*" User
+University "1" o-- "0..*" Course
+University "1" o-- "0..*" CourseOffering
+University "1" o-- "0..*" Journal
+University "1" o-- "0..*" SupportRequest
+University "1" o-- "0..*" NewsItem
+
+University "1" o-- "1" AuthService
+University "1" o-- "1" CourseRegistrationService
+University "1" o-- "1" NewsService
+University "1" o-- "1" SupportDeskService
+University "1" o-- "1" UniversityDataStore
+University "1" o-- "1" LogService
+University "1" o-- "1" ResearchService
+University "1" o-- "1" JournalService
+University "1" o-- "1" NotificationService
+University "1" o-- "1" ReportService
+University "1" o-- "1" UserManagementService
+
+AuthService "1" --> "1" UserRepository
+Session "1" --> "1" User
+
+CourseOffering "1" --> "1" Course : course
+Enrollment "1" --> "1" CourseOffering : offering
+
+Student "1" o-- "0..*" Enrollment
+Enrollment "1" *-- "0..1" Mark
+
+Course "1" *-- "0..*" Lesson
+Lesson "1" --> "1" Teacher
+
+Teacher "1" --> "0..*" Complaint
+Complaint "1" --> "1" Manager : dean
+Complaint "1" --> "1..*" Student
+
+Employee "1" --> "0..*" Message : sent
+Message "1" --> "1" Employee : receiver
+
+TechSupportSpecialist "1" --> "0..*" SupportRequest : handles
+SupportRequest "1" --> "1" User : createdBy
+SupportRequest "0..*" --> "0..1" TechSupportSpecialist : assignedTo
+
+Manager "1" --> "0..*" OfficialRequest : reviews
+OfficialRequest "1" --> "1" Employee : createdBy
+OfficialRequest "0..1" --> "1" Manager : signedBy
+
+User "1" o-- "0..1" ResearcherProfile : researcherProfile
+ResearcherProfile "1" --> "1" User : owner
+
+ResearchProject "1" o-- "0..*" Researcher : participants
+ResearchProject "1" o-- "0..*" ResearchPaper : publishedPapers
+ResearchPaper "1" -- "1..*" Researcher : authors
+ResearchPaper "1" --> "1" Journal : journal
+
+GraduateStudent "1" --> "1" Researcher : supervisor
+GraduateStudent "1" o-- "0..*" ResearchPaper : diplomaProjects
+
+Journal "1" o-- "0..*" Observer : subscribers
+Journal "1" o-- "0..*" ResearchPaper
+
+News "1" *-- "0..*" Comment
+Comment "1" --> "1" User : author
+
+StudentOrganization "1" o-- "0..*" Student : members
+StudentOrganization "1" --> "1" Student : head
+Student "0..*" -- "0..*" StudentOrganization
+
+Student "1" --> "0..*" TeacherRating : given
+Teacher "1" --> "0..*" TeacherRating : received
+
+note right of CourseOffering
+Stores which Course is offered
+for which major and year of study
+end note
+
+note right of University
+Singleton: University.getInstance()
+Acts as a Facade over all services
+end note
+
+note right of AuthService
+Authentication requirement:
+all system actions should be executed
+in context of an authenticated Session.
+end note
+
+note right of ResearcherProfile
+Wrapper (Bridge) for research behavior.
+Any User can have a ResearcherProfile,
+allowing Teachers, Students, or other
+Employees to act as Researchers.
+end note
+
+note right of Teacher
+Teachers CAN be researchers.
+Constraint: if position == PROFESSOR,
+then user should have a ResearcherProfile.
+end note
+
+note right of GraduateStudent
+GraduateStudent (MASTER/PHD) is always a researcher
+via ResearcherProfile (role composition).
+end note
+
+note right of Journal
+Observer: Journal notifies subscribers
+(User and NewsService)
+end note
+
+note right of PaperSortStrategy
+Strategy pattern: sorting papers
+(by date, citations, pages)
+Also: StudentSortStrategy, TeacherSortStrategy
+end note
+
+note right of CourseRegistrationService
+Rules from spec:
+- student total credits <= 21
+- student failCount <= 3
+end note
+
+note right of DefaultUserFactory
+Factory: centralized user creation
+end note
+
+note right of PinnedNewsDecorator
+Decorator: wraps NewsItem to pin/prioritize
+end note
+
+note right of NewsService
+generateResearchAnnouncement(...) should wrap RESEARCH
+news with PinnedNewsDecorator to increase priority.
+end note
+
+@enduml
