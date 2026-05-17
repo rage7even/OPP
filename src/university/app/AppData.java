@@ -1,4 +1,4 @@
-package wsp.app;
+﻿package university.app;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -106,3 +106,4 @@ public final class AppData {
         return students;
     }
 }
+

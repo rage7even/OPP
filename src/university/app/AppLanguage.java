@@ -1,4 +1,4 @@
-package wsp.app;
+﻿package university.app;
 
 import university.core.University;
 import university.enums.Language;
@@ -21,3 +21,4 @@ final class AppLanguage {
         return selectedLanguage;
     }
 }
+

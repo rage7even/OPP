@@ -1,4 +1,4 @@
-package wsp.app;
+﻿package university.app;
 
 import java.util.List;
 import java.util.Scanner;
@@ -142,3 +142,4 @@ public final class EducationApp {
         }
     }
 }
+

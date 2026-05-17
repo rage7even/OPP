@@ -1,4 +1,4 @@
-package wsp.app;
+﻿package university.app;
 
 import java.util.Scanner;
 
@@ -35,3 +35,4 @@ public final class ConsoleInput {
         return scanner.nextLine();
     }
 }
+

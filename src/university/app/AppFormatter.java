@@ -1,4 +1,4 @@
-package wsp.app;
+﻿package university.app;
 
 import university.education.Course;
 import university.education.Enrollment;
@@ -37,3 +37,4 @@ public final class AppFormatter {
                 + ", " + request.getDescription();
     }
 }
+

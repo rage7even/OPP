@@ -1,4 +1,4 @@
-package wsp.app;
+﻿package university.app;
 
 import java.util.Scanner;
 
@@ -118,3 +118,4 @@ public final class SupportApp {
         return University.getInstance().getSupportRequests().get(0);
     }
 }
+

@@ -1,4 +1,4 @@
-package wsp.app;
+﻿package university.app;
 
 import java.util.Arrays;
 import java.util.Scanner;
@@ -174,3 +174,4 @@ public final class ManagerApp {
         System.out.println(complaint);
     }
 }
+

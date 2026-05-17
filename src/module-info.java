@@ -1,5 +1,4 @@
-module WSP2 {
-	exports wsp.app;
+﻿module WSP2 {
 	exports university.app;
 	exports university.communication;
 	exports university.core;
@@ -15,3 +14,4 @@ module WSP2 {
 	exports university.support;
 	exports university.users;
 }
+

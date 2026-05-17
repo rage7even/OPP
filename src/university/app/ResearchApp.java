@@ -1,4 +1,4 @@
-package wsp.app;
+﻿package university.app;
 
 import java.util.Calendar;
 import java.util.Scanner;
@@ -164,3 +164,4 @@ public final class ResearchApp {
         return new ResearchPaper(id, title, citations, pages, calendar.getTime(), doi);
     }
 }
+
