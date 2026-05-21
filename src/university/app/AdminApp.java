@@ -66,6 +66,10 @@ public final class AdminApp {
             return;
         }
         String id = ConsoleInput.readLine(scanner, I18n.t("id"));
+        if (userExists(id)) {
+            System.out.println(I18n.t("duplicate.user"));
+            return;
+        }
         String name = ConsoleInput.readLine(scanner, I18n.t("name"));
         String email = ConsoleInput.readLine(scanner, I18n.t("email"));
         String password = ConsoleInput.readLine(scanner, I18n.t("password"));
@@ -100,6 +104,15 @@ public final class AdminApp {
             default:
                 return null;
         }
+    }
+
+    private static boolean userExists(String id) {
+        for (User user : University.getInstance().getUsers()) {
+            if (user.getId().equals(id)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void printUsers(List<User> users) {

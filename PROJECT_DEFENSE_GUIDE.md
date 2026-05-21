@@ -45,6 +45,105 @@ password: admin
 The first admin exists so the system is not locked when there are no users yet.
 After login as admin, create other users from Admin app.
 
+## 1.1 Bilingual Defense Notes / Двуязычные заметки для защиты
+
+Use this section when you need to explain the same idea in English and Russian.
+
+Этот раздел нужен, чтобы быстро объяснять проект на английском и русском.
+
+| English | Русский |
+| --- | --- |
+| This is a console-based research-oriented university system. | Это консольная система исследовательского университета. |
+| The project is built using object-oriented design. | Проект построен на объектно-ориентированном проектировании. |
+| The main entry point is `Main.java`. | Главная точка входа - `Main.java`. |
+| The central facade is the `University` singleton. | Центральный фасад системы - singleton `University`. |
+| Users must authenticate before accessing system modules. | Пользователи должны войти в систему перед доступом к модулям. |
+| After login, the launcher shows only modules allowed for the user's role. | После входа меню показывает только те модули, которые доступны роли пользователя. |
+| If the system has no users, a bootstrap admin is created. | Если в системе нет пользователей, создается стартовый администратор. |
+| Admin manages users, logs, saving, and loading data. | Администратор управляет пользователями, логами, сохранением и загрузкой данных. |
+| Student can view courses, register for courses, view transcript, and create support requests. | Студент может смотреть курсы, регистрироваться на курсы, смотреть транскрипт и создавать заявки в техподдержку. |
+| Manager can add course offerings, assign teachers, approve or reject registrations, manage news, and create reports. | Менеджер может добавлять предложения курсов, назначать преподавателей, одобрять или отклонять регистрации, управлять новостями и создавать отчеты. |
+| Teacher can put marks for approved enrollments. | Преподаватель может ставить оценки по одобренным регистрациям. |
+| Tech support specialist can process support requests. | Специалист техподдержки может обрабатывать заявки. |
+| Researcher can publish papers, calculate h-index, and work with journals/projects. | Исследователь может публиковать статьи, считать h-index и работать с журналами/проектами. |
+
+### Core Architecture / Основная архитектура
+
+| English | Русский |
+| --- | --- |
+| The app layer reads console input and calls services. | Слой app читает ввод из консоли и вызывает сервисы. |
+| Services contain business logic. | Сервисы содержат бизнес-логику. |
+| Domain classes store the state and behavior of real university objects. | Доменные классы хранят состояние и поведение реальных объектов университета. |
+| `University` stores global lists: users, courses, offerings, journals, news, requests, and logs. | `University` хранит глобальные списки: пользователи, курсы, предложения курсов, журналы, новости, заявки и логи. |
+| Serialization saves the whole university state to `data/university.ser`. | Сериализация сохраняет состояние университета в `data/university.ser`. |
+| Transient services are rebuilt after loading serialized data. | `transient` сервисы пересоздаются после загрузки сериализованных данных. |
+
+### Authentication / Аутентификация
+
+| English | Русский |
+| --- | --- |
+| `AuthService.login()` checks email and password. | `AuthService.login()` проверяет email и пароль. |
+| If credentials are valid, it returns a `Session`. | Если данные правильные, метод возвращает `Session`. |
+| If credentials are wrong, it throws `UnauthorizedActionException`. | Если данные неверные, выбрасывается `UnauthorizedActionException`. |
+| `Main.runLauncher()` uses `instanceof` checks to protect role-based access. | `Main.runLauncher()` использует проверки `instanceof`, чтобы защитить доступ по ролям. |
+
+### Course Registration / Регистрация на курс
+
+| English | Русский |
+| --- | --- |
+| Registration starts when a student chooses a `CourseOffering`. | Регистрация начинается, когда студент выбирает `CourseOffering`. |
+| `CourseRegistrationService.register()` validates all rules. | `CourseRegistrationService.register()` проверяет все правила. |
+| The student cannot exceed 21 credits. | Студент не может превысить 21 кредит. |
+| The student cannot have more than 3 fails. | У студента не может быть больше 3 провалов. |
+| The course must have available capacity. | В курсе должны быть свободные места. |
+| Prerequisites must be satisfied. | Пререквизиты должны быть выполнены. |
+| Registration creates an `Enrollment` with `PENDING` status. | Регистрация создает `Enrollment` со статусом `PENDING`. |
+| Manager approves or rejects the pending enrollment. | Менеджер одобряет или отклоняет ожидающую регистрацию. |
+| Approval changes status to `APPROVED`, occupies a seat, and adds credits. | Одобрение меняет статус на `APPROVED`, занимает место и добавляет кредиты. |
+| Rejection changes status to `REJECTED`. | Отклонение меняет статус на `REJECTED`. |
+
+### Marks and Transcript / Оценки и транскрипт
+
+| English | Русский |
+| --- | --- |
+| Teacher can put marks only for approved enrollments. | Преподаватель может ставить оценки только по одобренным регистрациям. |
+| `Mark` stores attestation 1, attestation 2, and final exam. | `Mark` хранит первую аттестацию, вторую аттестацию и финальный экзамен. |
+| `Enrollment.setMark()` saves the mark and updates student GPA. | `Enrollment.setMark()` сохраняет оценку и обновляет GPA студента. |
+| If final grade is below 50, student fail count increases. | Если итоговая оценка ниже 50, количество провалов студента увеличивается. |
+| `Student.getTranscript()` prints enrollments and GPA. | `Student.getTranscript()` выводит регистрации и GPA. |
+
+### Research / Исследования
+
+| English | Русский |
+| --- | --- |
+| `Researcher` is modeled as a role. | `Researcher` смоделирован как роль. |
+| Any user can have a `ResearcherProfile`. | Любой пользователь может иметь `ResearcherProfile`. |
+| Graduate students are always researchers. | Магистранты всегда являются исследователями. |
+| Professor teachers are automatically researchers. | Преподаватели-профессора автоматически являются исследователями. |
+| A researcher can publish papers to journals. | Исследователь может публиковать статьи в журналы. |
+| `ResearcherProfile.calculateHIndex()` calculates h-index. | `ResearcherProfile.calculateHIndex()` считает h-index. |
+| Publishing a paper notifies journal observers. | Публикация статьи уведомляет наблюдателей журнала. |
+
+### Patterns / Паттерны
+
+| English | Русский |
+| --- | --- |
+| Singleton is used by `University`. | Singleton используется в `University`. |
+| Factory is used by `DefaultUserFactory` and `CitationFormatterFactory`. | Factory используется в `DefaultUserFactory` и `CitationFormatterFactory`. |
+| Strategy is used for sorting papers, students, and teachers. | Strategy используется для сортировки статей, студентов и преподавателей. |
+| Observer is used by journals and subscribers. | Observer используется журналами и подписчиками. |
+| Decorator is used to pin research news. | Decorator используется для закрепления исследовательских новостей. |
+
+### Diagram Explanation / Объяснение диаграмм
+
+| English | Русский |
+| --- | --- |
+| The Class Diagram shows domain and service classes. | Class Diagram показывает доменные и сервисные классы. |
+| Console UI classes are intentionally not included in the domain diagram. | Консольные UI-классы намеренно не включены в доменную диаграмму. |
+| Enums are connected to the classes that use them. | Enum-ы соединены с классами, которые их используют. |
+| Use Case diagram describes what actors can do. | Use Case диаграмма описывает, что могут делать акторы. |
+| Implementation focuses on the most important PDF functions: registration, marks, research, auth, serialization, localization, and patterns. | Реализация фокусируется на самых важных функциях из PDF: регистрация, оценки, исследования, аутентификация, сериализация, локализация и паттерны. |
+
 ## 2. Diagram Consistency Check
 
 ### 2.1 ClassDiagram.puml vs source code
@@ -1431,4 +1530,3 @@ Researcher      ResearchApp      JournalService      Journal        Observers
     |               |                 |                | notify       |
     |               |                 |                +------------->|
 ```
-

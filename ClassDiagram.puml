@@ -728,6 +728,23 @@ Student "0..*" -- "0..*" StudentOrganization
 
 Student "1" --> "0..*" TeacherRating : given
 Teacher "1" --> "0..*" TeacherRating : received
+LogService "1" o-- "0..*" LogEntry : entries
+ReportService ..> StatisticalReport : creates
+
+' ===================== ENUM / VALUE TYPE RELATIONSHIPS =====================
+User --> Language : selected language
+Teacher --> TeacherPosition : position
+Course --> CourseType : type
+Lesson --> LessonType : type
+Complaint --> Urgency : urgency
+SupportRequest --> RequestStatus : status
+GraduateStudent --> DegreeType : degree
+Manager --> ManagerType : managerType
+ResearchPaper ..> Format : getCitation(format)
+CitationFormatterFactory ..> Format : creates by format
+News --> NewsTopic : topic
+Enrollment --> RegistrationStatus : status
+DefaultUserFactory ..> UserRole : creates by role
 
 note right of CourseOffering
 Stores which Course is offered

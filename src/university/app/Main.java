@@ -1,5 +1,6 @@
 ﻿package university.app;
 
+import java.io.File;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Scanner;
@@ -11,6 +12,7 @@ import university.employees.Teacher;
 import university.enums.Language;
 import university.enums.UserRole;
 import university.exceptions.UnauthorizedActionException;
+import university.exceptions.UniversityException;
 import university.patterns.DefaultUserFactory;
 import university.services.Session;
 import university.users.Student;
@@ -25,6 +27,8 @@ public final class Main {
 
         Scanner scanner = new Scanner(System.in);
         Language language = chooseLanguage(scanner);
+        AppLanguage.apply(language);
+        loadSavedDataIfPresent();
         AppLanguage.apply(language);
         System.out.println(I18n.f("selected.language", I18n.languageName(language)));
         System.out.println();
@@ -77,6 +81,9 @@ public final class Main {
                 case 5:
                     SupportApp.run(scanner, user);
                     break;
+                case 6:
+                    NewsApp.run(scanner, user);
+                    break;
                 case 0:
                     University.getInstance().getAuthService().logout(session);
                     System.out.println(I18n.t("logged.out"));
@@ -106,6 +113,7 @@ public final class Main {
             System.out.println(I18n.t("launcher.research"));
         }
         System.out.println(I18n.t("launcher.support"));
+        System.out.println(I18n.t("launcher.news"));
         System.out.println(I18n.t("launcher.logout"));
     }
 
@@ -134,10 +142,23 @@ public final class Main {
         if (!University.getInstance().getUsers().isEmpty()) {
             return;
         }
-        User admin = new DefaultUserFactory().create(UserRole.ADMIN, "A1", "Aigerim Admin", "admin@uni.kz", "admin");
+        User admin = new DefaultUserFactory().create(UserRole.ADMIN, "A1", "Admin", "admin@uni.kz", "admin");
         admin.changeLanguage(AppLanguage.selected());
         University.getInstance().addUser(admin);
         System.out.println(I18n.t("bootstrap.admin.created"));
+    }
+
+    private static void loadSavedDataIfPresent() {
+        File dataFile = new File("data/university.ser");
+        if (!dataFile.exists() || dataFile.length() == 0) {
+            return;
+        }
+        try {
+            University.getInstance().load();
+            System.out.println(I18n.t("data.loaded"));
+        } catch (UniversityException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     /*

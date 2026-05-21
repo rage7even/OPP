@@ -114,6 +114,7 @@ public final class I18n {
             case "launcher.manager": return "3 - Manager app";
             case "launcher.research": return "4 - Research app";
             case "launcher.support": return "5 - Support app";
+            case "launcher.news": return "6 - News app";
             case "launcher.exit": return "0 - Exit";
             case "launcher.logout": return "0 - Logout";
             case "login.title": return "=== Login ===";
@@ -140,6 +141,7 @@ public final class I18n {
             case "roles": return "Roles: 1-STUDENT, 2-GRADUATE_STUDENT, 3-TEACHER, 4-MANAGER, 5-ADMIN, 6-TECH_SUPPORT";
             case "role": return "Role:";
             case "invalid.role": return "Invalid role.";
+            case "duplicate.user": return "User with this id already exists. Use another id.";
             case "id": return "Id:";
             case "name": return "Name:";
             case "email": return "Email:";
@@ -203,6 +205,16 @@ public final class I18n {
             case "published.papers": return "Published papers.";
             case "sort.papers": return "1 - by citations, 2 - by date, 3 - by pages";
             case "news": return "News:";
+            case "news.app.title": return "--- News app ---";
+            case "news.show": return "1 - Show news";
+            case "news.details": return "2 - Show news details";
+            case "news.comment": return "3 - Add comment";
+            case "news.number": return "News number:";
+            case "comment.text": return "Comment text:";
+            case "comment.added": return "Comment added.";
+            case "comments": return "Comments:";
+            case "comments.word": return "comments";
+            case "no.comments": return "No comments.";
             case "no.news": return "No news found.";
             case "student.notifications": return "Student notifications:";
             case "support.title": return "--- Support app ---";
@@ -262,6 +274,7 @@ public final class I18n {
             case "launcher.manager": return "3 - Приложение менеджера";
             case "launcher.research": return "4 - Исследовательское приложение";
             case "launcher.support": return "5 - Приложение техподдержки";
+            case "launcher.news": return "6 - Приложение новостей";
             case "launcher.exit": return "0 - Выход";
             case "launcher.logout": return "0 - Выйти из аккаунта";
             case "login.title": return "=== Вход ===";
@@ -288,6 +301,7 @@ public final class I18n {
             case "roles": return "Роли: 1-СТУДЕНТ, 2-МАГИСТРАНТ, 3-ПРЕПОДАВАТЕЛЬ, 4-МЕНЕДЖЕР, 5-АДМИН, 6-ТЕХПОДДЕРЖКА";
             case "role": return "Роль:";
             case "invalid.role": return "Неверная роль.";
+            case "duplicate.user": return "Пользователь с таким id уже существует. Введите другой id.";
             case "id": return "Id:";
             case "name": return "Имя:";
             case "email": return "Email:";
@@ -351,6 +365,16 @@ public final class I18n {
             case "published.papers": return "Статьи опубликованы.";
             case "sort.papers": return "1 - по цитированиям, 2 - по дате, 3 - по страницам";
             case "news": return "Новости:";
+            case "news.app.title": return "--- Новости ---";
+            case "news.show": return "1 - Показать новости";
+            case "news.details": return "2 - Показать детали новости";
+            case "news.comment": return "3 - Добавить комментарий";
+            case "news.number": return "Номер новости:";
+            case "comment.text": return "Текст комментария:";
+            case "comment.added": return "Комментарий добавлен.";
+            case "comments": return "Комментарии:";
+            case "comments.word": return "комментариев";
+            case "no.comments": return "Комментариев нет.";
             case "no.news": return "Новостей нет.";
             case "student.notifications": return "Уведомления студента:";
             case "support.title": return "--- Техподдержка ---";
@@ -410,6 +434,7 @@ public final class I18n {
             case "launcher.manager": return "3 - Менеджер қосымшасы";
             case "launcher.research": return "4 - Зерттеу қосымшасы";
             case "launcher.support": return "5 - Техникалық қолдау қосымшасы";
+            case "launcher.news": return "6 - Жаңалықтар қосымшасы";
             case "launcher.exit": return "0 - Шығу";
             case "launcher.logout": return "0 - Аккаунттан шығу";
             case "login.title": return "=== Кіру ===";
@@ -436,6 +461,7 @@ public final class I18n {
             case "roles": return "Рөлдер: 1-СТУДЕНТ, 2-МАГИСТРАНТ, 3-ОҚЫТУШЫ, 4-МЕНЕДЖЕР, 5-ӘКІМШІ, 6-ТЕХҚОЛДАУ";
             case "role": return "Рөл:";
             case "invalid.role": return "Рөл дұрыс емес.";
+            case "duplicate.user": return "Бұл id бар пайдаланушы бар. Басқа id енгізіңіз.";
             case "id": return "Id:";
             case "name": return "Аты:";
             case "email": return "Email:";
@@ -499,6 +525,16 @@ public final class I18n {
             case "published.papers": return "Мақалалар жарияланды.";
             case "sort.papers": return "1 - дәйексөз бойынша, 2 - күн бойынша, 3 - бет саны бойынша";
             case "news": return "Жаңалықтар:";
+            case "news.app.title": return "--- Жаңалықтар ---";
+            case "news.show": return "1 - Жаңалықтарды көрсету";
+            case "news.details": return "2 - Жаңалық мәліметтерін көрсету";
+            case "news.comment": return "3 - Пікір қосу";
+            case "news.number": return "Жаңалық нөмірі:";
+            case "comment.text": return "Пікір мәтіні:";
+            case "comment.added": return "Пікір қосылды.";
+            case "comments": return "Пікірлер:";
+            case "comments.word": return "пікір";
+            case "no.comments": return "Пікірлер жоқ.";
             case "no.news": return "Жаңалықтар жоқ.";
             case "student.notifications": return "Студент хабарламалары:";
             case "support.title": return "--- Техникалық қолдау ---";

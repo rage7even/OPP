@@ -31,9 +31,44 @@ public class Mark implements Serializable {
         return finalExam;
     }
 
+    public String getLetterGrade() {
+        double grade = getFinalGrade();
+        if (grade >= 95) {
+            return "A";
+        }
+        if (grade >= 90) {
+            return "A-";
+        }
+        if (grade >= 85) {
+            return "B+";
+        }
+        if (grade >= 80) {
+            return "B";
+        }
+        if (grade >= 75) {
+            return "B-";
+        }
+        if (grade >= 70) {
+            return "C+";
+        }
+        if (grade >= 65) {
+            return "C";
+        }
+        if (grade >= 60) {
+            return "C-";
+        }
+        if (grade >= 55) {
+            return "D+";
+        }
+        if (grade >= 50) {
+            return "D";
+        }
+        return "Fail";
+    }
+
     @Override
     public String toString() {
-        return String.format("A1=%.1f, A2=%.1f, Final=%.1f, Grade=%.1f",
-                attestation1, attestation2, finalExam, getFinalGrade());
+        return String.format("A1=%.1f, A2=%.1f, Final=%.1f, Grade=%.1f, Letter=%s",
+                attestation1, attestation2, finalExam, getFinalGrade(), getLetterGrade());
     }
 }
