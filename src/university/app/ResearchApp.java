@@ -279,7 +279,7 @@ public final class ResearchApp {
         }
         graduateStudent.addDiplomaProject(diplomaProject);
         University.getInstance().getLogService().log(graduateStudent, "Added diploma project " + id);
-        System.out.println(I18n.f("diploma.project.saved", diplomaProject));
+        System.out.println(I18n.f("diploma.project.saved", AppFormatter.diplomaProject(diplomaProject)));
     }
 
     private static void showDiplomaProjects(GraduateStudent graduateStudent) {
@@ -288,7 +288,7 @@ public final class ResearchApp {
             return;
         }
         for (ResearchPaper diplomaProject : graduateStudent.getDiplomaProjects()) {
-            System.out.println(diplomaProject);
+            System.out.println(AppFormatter.diplomaProject(diplomaProject));
         }
     }
 

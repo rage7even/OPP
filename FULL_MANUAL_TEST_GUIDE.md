@@ -1487,6 +1487,17 @@ GraduateStudent должен видеть:
 
 ```text
 4 - Research app
+5 - Support app
+6 - News app
+7 - Change language
+8 - Change password
+```
+
+Important:
+
+```text
+GraduateStudent no longer sees 2 - Education app.
+Education app is now only for regular Student, Teacher, and Manager roles.
 ```
 
 Открыть:

@@ -16,6 +16,7 @@ import university.exceptions.UnauthorizedActionException;
 import university.exceptions.UniversityException;
 import university.patterns.DefaultUserFactory;
 import university.services.Session;
+import university.users.GraduateStudent;
 import university.users.Student;
 import university.users.StudentOrganization;
 import university.users.User;
@@ -61,7 +62,7 @@ public final class Main {
                     }
                     break;
                 case 2:
-                    if (user instanceof Student || user instanceof Teacher || user instanceof Manager) {
+                    if (canUseEducationApp(user)) {
                         EducationApp.run(scanner, user);
                     } else {
                         System.out.println(I18n.t("access.denied"));
@@ -119,7 +120,7 @@ public final class Main {
         if (user instanceof Admin) {
             System.out.println(I18n.t("launcher.admin"));
         }
-        if (user instanceof Student || user instanceof Teacher || user instanceof Manager) {
+        if (canUseEducationApp(user)) {
             System.out.println(I18n.t("launcher.education"));
         }
         if (user instanceof Manager) {
@@ -157,6 +158,14 @@ public final class Main {
             System.out.println(I18n.t("login.failed"));
             return null;
         }
+    }
+
+    private static boolean canUseEducationApp(User user) {
+        return isRegularStudent(user) || user instanceof Teacher || user instanceof Manager;
+    }
+
+    private static boolean isRegularStudent(User user) {
+        return user instanceof Student && !(user instanceof GraduateStudent);
     }
 
     private static void ensureBootstrapAdmin() {

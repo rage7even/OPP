@@ -20,6 +20,7 @@ import university.patterns.SortTeacherByNameStrategy;
 import university.patterns.SortTeacherByRatingStrategy;
 import university.research.Journal;
 import university.research.JournalRequest;
+import university.users.GraduateStudent;
 import university.users.StudentOrganization;
 import university.users.StudentOrganizationRequest;
 
@@ -232,13 +233,12 @@ public final class ManagerApp {
 
     private static void officialRequest(Scanner scanner, Manager manager) {
         Teacher teacher = selectTeacher(scanner, manager);
-        university.users.Student student = selectStudent(scanner);
         if (teacher == null) {
             System.out.println(I18n.t("no.teacher"));
             return;
         }
+        university.users.Student student = selectStudentForTeacher(scanner, teacher);
         if (student == null) {
-            System.out.println(I18n.t("no.student"));
             return;
         }
         String officialDescription = ConsoleInput.readLine(scanner, I18n.t("official.description"));
@@ -388,9 +388,23 @@ public final class ManagerApp {
         return findTeacher(ConsoleInput.readLine(scanner, I18n.t("teacher.id")));
     }
 
-    private static university.users.Student selectStudent(Scanner scanner) {
-        java.util.List<university.users.Student> students = AppData.students();
+    private static university.users.Student selectStudentForTeacher(Scanner scanner, Teacher teacher) {
+        java.util.List<university.users.Student> students = new java.util.ArrayList<university.users.Student>();
+        for (Course course : teacher.viewCourses()) {
+            for (university.users.Student student : teacher.viewStudents(course)) {
+                if (student instanceof GraduateStudent) {
+                    continue;
+                }
+                if (!hasApprovedEnrollment(student, course)) {
+                    continue;
+                }
+                if (!students.contains(student)) {
+                    students.add(student);
+                }
+            }
+        }
         if (students.isEmpty()) {
+            System.out.println(I18n.t("no.teacher.students"));
             return null;
         }
         for (university.users.Student student : students) {
@@ -403,6 +417,16 @@ public final class ManagerApp {
             }
         }
         return null;
+    }
+
+    private static boolean hasApprovedEnrollment(university.users.Student student, Course course) {
+        for (university.education.Enrollment enrollment : student.getEnrollments()) {
+            if (enrollment.getOffering().getCourse().equals(course)
+                    && enrollment.getStatus() == RegistrationStatus.APPROVED) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static JournalRequest selectPendingJournalRequest(Scanner scanner) {

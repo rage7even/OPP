@@ -13,6 +13,7 @@ import university.enums.LessonType;
 import university.enums.RegistrationStatus;
 import university.employees.Manager;
 import university.employees.Teacher;
+import university.users.GraduateStudent;
 import university.users.Student;
 import university.users.StudentOrganization;
 import university.users.StudentOrganizationRequest;
@@ -23,10 +24,11 @@ public final class EducationApp {
     }
 
     public static void run(Scanner scanner, User currentUser) {
+        boolean regularStudent = isRegularStudent(currentUser);
         while (true) {
             System.out.println(I18n.t("education.title"));
             System.out.println(I18n.t("education.show.courses"));
-            if (currentUser instanceof Student) {
+            if (regularStudent) {
                 System.out.println(I18n.t("education.register"));
                 System.out.println(I18n.t("education.transcript"));
                 System.out.println(I18n.t("education.teachers"));
@@ -51,7 +53,7 @@ public final class EducationApp {
                     printList(University.getInstance().getCourses());
                     break;
                 case 2:
-                    if (currentUser instanceof Student) {
+                    if (regularStudent) {
                         registerStudent(scanner, (Student) currentUser);
                     } else {
                         System.out.println(I18n.t("access.denied"));
@@ -72,21 +74,21 @@ public final class EducationApp {
                     }
                     break;
                 case 5:
-                    if (currentUser instanceof Student) {
+                    if (regularStudent) {
                         showTranscript((Student) currentUser);
                     } else {
                         System.out.println(I18n.t("access.denied"));
                     }
                     break;
                 case 6:
-                    if (currentUser instanceof Student) {
+                    if (regularStudent) {
                         showCourseTeachers(scanner);
                     } else {
                         System.out.println(I18n.t("access.denied"));
                     }
                     break;
                 case 7:
-                    if (currentUser instanceof Student) {
+                    if (regularStudent) {
                         rateTeacher(scanner, (Student) currentUser);
                     } else {
                         System.out.println(I18n.t("access.denied"));
@@ -95,28 +97,28 @@ public final class EducationApp {
                 case 8:
                     if (currentUser instanceof Manager) {
                         rejectPending(scanner, (Manager) currentUser);
-                    } else if (currentUser instanceof Student) {
+                    } else if (regularStudent) {
                         showOrganizations((Student) currentUser);
                     } else {
                         System.out.println(I18n.t("access.denied"));
                     }
                     break;
                 case 9:
-                    if (currentUser instanceof Student) {
+                    if (regularStudent) {
                         joinOrganization(scanner, (Student) currentUser);
                     } else {
                         System.out.println(I18n.t("access.denied"));
                     }
                     break;
                 case 10:
-                    if (currentUser instanceof Student) {
+                    if (regularStudent) {
                         leaveOrganization(scanner, (Student) currentUser);
                     } else {
                         System.out.println(I18n.t("access.denied"));
                     }
                     break;
                 case 11:
-                    if (currentUser instanceof Student) {
+                    if (regularStudent) {
                         requestOrganization(scanner, (Student) currentUser);
                     } else {
                         System.out.println(I18n.t("access.denied"));
@@ -150,6 +152,10 @@ public final class EducationApp {
         } catch (RuntimeException e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    private static boolean isRegularStudent(User user) {
+        return user instanceof Student && !(user instanceof GraduateStudent);
     }
 
     private static void approvePending(Scanner scanner, Manager manager) {

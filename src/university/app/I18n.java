@@ -285,6 +285,7 @@ public final class I18n {
             case "request": return "request";
             case "request.id": return "Request id:";
             case "no.student": return "No student found. Add a student in Admin app first.";
+            case "no.teacher.students": return "No regular students found for selected teacher.";
             case "no.manager": return "No manager found. Add a manager in Admin app first.";
             case "no.teacher": return "No teacher found. Add a teacher in Admin app first.";
             case "no.support.specialist": return "No tech support specialist found. Add one in Admin app first.";
@@ -348,6 +349,7 @@ public final class I18n {
             case "duplicate.journal.request": return "A pending journal request with this journal id already exists.";
             case "diploma.project.saved": return "Diploma project saved:";
             case "no.diploma.projects": return "No diploma projects found.";
+            case "diploma.project.draft": return "diploma project draft";
             case "paper.citations.nonnegative": return "Citations cannot be negative.";
             case "paper.pages.positive": return "Pages must be positive.";
             case "year.invalid": return "Year must be greater than 1900.";

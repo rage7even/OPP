@@ -1,11 +1,14 @@
 package university.app;
 
+import java.util.Calendar;
+
 import university.education.Course;
 import university.education.CourseOffering;
 import university.education.Enrollment;
 import university.education.Mark;
 import university.enums.RegistrationStatus;
 import university.research.JournalRequest;
+import university.research.ResearchPaper;
 import university.support.SupportRequest;
 import university.users.Student;
 import university.users.StudentOrganization;
@@ -97,6 +100,30 @@ public final class AppFormatter {
                 + I18n.t("status")
                 + ": "
                 + I18n.registrationStatus(request.getStatus());
+    }
+
+    public static String diplomaProject(ResearchPaper paper) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(paper.getPublishedAt());
+        String status = paper.getJournal() == null
+                ? I18n.t("diploma.project.draft")
+                : paper.getJournalTitle();
+        return paper.getPaperId()
+                + " - "
+                + paper.getTitle()
+                + " ["
+                + paper.getCitations()
+                + " citations, "
+                + paper.getPages()
+                + " pages, "
+                + I18n.t("year")
+                + ": "
+                + calendar.get(Calendar.YEAR)
+                + ", "
+                + I18n.t("status")
+                + ": "
+                + status
+                + "]";
     }
 
     private static int approvedCount(CourseOffering offering) {
