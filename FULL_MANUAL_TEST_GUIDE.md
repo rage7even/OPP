@@ -1224,6 +1224,102 @@ News
 NewsTopic.GENERAL
 ```
 
+### 14.1 Generate Top Cited Researcher News
+
+Manager app:
+
+```text
+11 - Generate top cited researcher news
+School: SITE
+Year: 2026
+```
+
+Expected:
+
+```text
+Generated news: [PINNED] Top cited researcher 2026 ...
+```
+
+Проверяет:
+
+```text
+NewsService.generateTopCitedResearcherNews()
+ResearchService.getTopCitedResearcher()
+Pinned research news generation
+```
+
+### 14.2 Journal Creation Requests
+
+Researcher sends a request first:
+
+```text
+Login: grad@uni.kz / grad
+4 - Research app
+1 - Request journal creation
+Journal id: J-UR
+Journal title: University Research Journal
+```
+
+Expected:
+
+```text
+Journal request sent: JREQ-... - Grad Student, J-UR, University Research Journal, status: pending
+```
+
+Now login as manager and review it:
+
+```text
+dean@uni.kz
+dean
+3 - Manager app
+13 - Show journal creation requests
+```
+
+Expected:
+
+```text
+JREQ-... - Grad Student, J-UR, University Research Journal, status: pending
+```
+
+Approve:
+
+```text
+14 - Approve journal creation request
+Journal request id: JREQ-...
+```
+
+Expected:
+
+```text
+Journal request approved: JREQ-... status: approved
+```
+
+Проверяет:
+
+```text
+JournalRequest
+University.addJournalRequest()
+Manager approve flow
+University.addJournal()
+Requester notification
+```
+
+### 14.3 Manager Creates Journal Directly
+
+Manager app:
+
+```text
+12 - Create journal
+Journal id: J-MGR
+Journal title: Manager Created Journal
+```
+
+Expected:
+
+```text
+Created journal: J-MGR - Manager Created Journal
+```
+
 ## 15. Manager: Official Request and Complaint
 
 Manager app:
@@ -1402,20 +1498,20 @@ GraduateStudent должен видеть:
 Research menu:
 
 ```text
-1 - Create journal
+1 - Request journal creation
 2 - Publish paper
-3 - Show first researcher h-index
+3 - Show my h-index
 4 - Print papers sorted
-5 - Assign supervisor
-6 - Join research project
+5 - Set supervisor
+6 - Create and join research project
 7 - Show news and notifications
-8 - Generate top cited researcher news
+8 - Show my journal requests
 9 - Add diploma project
 10 - Show diploma projects
 0 - Back
 ```
 
-### 16.1 Create Journal
+### 16.1 Request Journal Creation
 
 Negative test:
 
@@ -1430,7 +1526,7 @@ Expected:
 This field is required.
 ```
 
-Now create a valid journal:
+Now create a valid request:
 
 ```text
 1
@@ -1441,23 +1537,25 @@ Journal title: University Research Journal
 Ожидаемый результат:
 
 ```text
-Created journal: ...
+Journal request sent: ...
 ```
 
-If you try the same `Journal id` again:
+If you try the same pending `Journal id` again:
 
 ```text
-Journal with this id already exists.
+A pending journal request with this journal id already exists.
 ```
 
 Проверяет:
 
 ```text
-Journal
-University.addJournal()
-Journal subscribes NewsService and NotificationService
-Observer pattern
+JournalRequest
+University.addJournalRequest()
+Pending request duplicate validation
+Researcher -> Manager request workflow
 ```
+
+Before publishing into `J-UR`, manager must approve the request in `Manager app -> 14 - Approve journal creation request`.
 
 ### 16.2 Publish Paper
 
@@ -1492,7 +1590,7 @@ NewsService.generateResearchAnnouncement()
 PinnedNewsDecorator
 ```
 
-### 16.3 Show H-index
+### 16.3 Show My H-index
 
 ```text
 3
@@ -1531,9 +1629,9 @@ SortByPagesStrategy
 Strategy pattern
 ```
 
-### 16.5 Assign Supervisor
+### 16.5 Set Supervisor
 
-This action now asks for exact ids. It should not silently select the first graduate student or first researcher.
+This action now works only for the currently logged-in graduate student.
 
 Important setup:
 
@@ -1577,7 +1675,6 @@ Then login as graduate student again:
 
 ```text
 5
-Student id: G1
 Researcher user id: T1
 ```
 
@@ -1596,13 +1693,13 @@ Supervisor assigned: ...
 Проверяет:
 
 ```text
-ResearchService.assignSupervisor()
-GraduateStudent.assignSupervisor()
+ResearchService.setSupervisor()
+GraduateStudent.setSupervisor()
 LowHIndexException
 Self-supervisor protection
 ```
 
-### 16.6 Join Research Project
+### 16.6 Create And Join Research Project
 
 ```text
 6
@@ -1647,26 +1744,16 @@ Pinned research news priority
 Observer notifications
 ```
 
-### 16.8 Generate Top Cited Researcher News
+### 16.8 Show My Journal Requests
 
 ```text
 8
-School: SITE
-Year: 2026
 ```
 
 Expected:
 
 ```text
-Generated news: [PINNED] Top cited researcher 2026 ...
-```
-
-Проверяет:
-
-```text
-NewsService.generateTopCitedResearcherNews()
-ResearchService.getTopCitedResearcher()
-Pinned research news generation
+JREQ-... - Grad Student, J-UR, University Research Journal, status: approved
 ```
 
 ### 16.9 Diploma Projects
@@ -1692,7 +1779,7 @@ Diploma project saved: ...
 Now show saved diploma projects:
 
 ```text
-10  
+10
 ```
 
 Expected:
@@ -2310,16 +2397,17 @@ Use this table to mark what you tested.
 | `CourseRegistrationService.approve` | Manager approves enrollment | [ ] |
 | `CourseRegistrationService.reject` | Manager rejects enrollment | [ ] |
 | `StudentOrganizationRequest` | Student creates request, manager approves/rejects | [ ] |
+| `JournalRequest` | Researcher creates request, manager approves/rejects or rejects | [ ] |
 | `CommunicationApp` / `Message` | Employee sends and reads messages | [ ] |
 | `ReportService` | Manager creates academic report | [ ] |
 | `NewsService.addGeneralNews` | Manager creates news | [ ] |
-| `NewsService.generateTopCitedResearcherNews` | Research app generates top cited news manually | [ ] |
+| `NewsService.generateTopCitedResearcherNews` | Manager app generates top cited news manually | [ ] |
 | `NewsItem.addComment` | News app adds comment | [ ] |
 | `JournalService.publishPaper` | Researcher publishes paper | [ ] |
 | `JournalService.subscribe` | News app subscribes user to journal | [ ] |
 | `JournalService.unsubscribe` | News app unsubscribes user from journal | [ ] |
 | `ResearchService.printAllResearchPapers` | Research sorted papers | [ ] |
-| `ResearchService.assignSupervisor` | Research app assigns supervisor by ids | [ ] |
+| `ResearchService.setSupervisor` | Graduate student sets supervisor for self | [ ] |
 | `ResearchService.joinProject` | Researcher joins project | [ ] |
 | `GraduateStudent.addDiplomaProject` | Graduate student adds and shows diploma project | [ ] |
 | `SupportDeskService.createRequest` | User creates support request | [ ] |
@@ -2360,7 +2448,7 @@ If you want one compact full path:
 19. Login manager.
 20. Create report, news, official request/complaint, then send one employee message to T1.
 21. Login graduate student.
-22. Create journal, publish paper, show h-index, sort papers, join project, generate top cited researcher news, add diploma project.
+22. Send journal request, get manager approval, publish paper, show my h-index, sort papers, set supervisor, create and join project, show journal requests, add diploma project.
 23. Login student.
 24. Create support request and check notifications.
 25. Login tech support.

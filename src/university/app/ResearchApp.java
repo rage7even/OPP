@@ -9,6 +9,7 @@ import university.patterns.SortByCitationsStrategy;
 import university.patterns.SortByDateStrategy;
 import university.patterns.SortByPagesStrategy;
 import university.research.Journal;
+import university.research.JournalRequest;
 import university.research.ResearchPaper;
 import university.research.ResearchProject;
 import university.research.ResearcherProfile;
@@ -26,18 +27,22 @@ public final class ResearchApp {
             System.out.println(I18n.t("research.publish"));
             System.out.println(I18n.t("research.hindex"));
             System.out.println(I18n.t("research.sorted"));
-            System.out.println(I18n.t("research.supervisor"));
+            if (currentUser instanceof GraduateStudent) {
+                System.out.println(I18n.t("research.supervisor"));
+            }
             System.out.println(I18n.t("research.join"));
             System.out.println(I18n.t("research.news"));
-            System.out.println(I18n.t("research.top.cited.news"));
-            System.out.println(I18n.t("research.diploma.add"));
-            System.out.println(I18n.t("research.diploma.show"));
+            System.out.println(I18n.t("research.journal.requests"));
+            if (currentUser instanceof GraduateStudent) {
+                System.out.println(I18n.t("research.diploma.add"));
+                System.out.println(I18n.t("research.diploma.show"));
+            }
             System.out.println(I18n.t("back"));
 
             int choice = ConsoleInput.readInt(scanner, I18n.t("choose"));
             switch (choice) {
                 case 1:
-                    createJournal(scanner);
+                    requestJournalCreation(scanner, currentUser);
                     break;
                 case 2:
                     publishPaper(scanner, currentUser);
@@ -49,7 +54,11 @@ public final class ResearchApp {
                     printSorted(scanner);
                     break;
                 case 5:
-                    assignSupervisor(scanner);
+                    if (currentUser instanceof GraduateStudent) {
+                        setSupervisor(scanner, (GraduateStudent) currentUser);
+                    } else {
+                        System.out.println(I18n.t("access.denied"));
+                    }
                     break;
                 case 6:
                     joinProject(scanner, currentUser);
@@ -58,7 +67,7 @@ public final class ResearchApp {
                     showNewsAndNotifications(currentUser);
                     break;
                 case 8:
-                    generateTopCitedResearcherNews(scanner);
+                    showMyJournalRequests(currentUser);
                     break;
                 case 9:
                     if (currentUser instanceof GraduateStudent) {
@@ -83,7 +92,7 @@ public final class ResearchApp {
         }
     }
 
-    private static void createJournal(Scanner scanner) {
+    private static void requestJournalCreation(Scanner scanner, User currentUser) {
         String id = readRequiredLine(scanner, I18n.t("journal.id"));
         if (id == null) {
             return;
@@ -92,13 +101,23 @@ public final class ResearchApp {
             System.out.println(I18n.t("duplicate.journal"));
             return;
         }
+        if (pendingJournalRequestExists(id)) {
+            System.out.println(I18n.t("duplicate.journal.request"));
+            return;
+        }
         String title = readRequiredLine(scanner, I18n.t("journal.title"));
         if (title == null) {
             return;
         }
-        Journal journal = new Journal(id, title);
-        University.getInstance().addJournal(journal);
-        System.out.println(I18n.f("created.journal", journal));
+        JournalRequest request = new JournalRequest(
+                "JREQ-" + System.nanoTime(),
+                currentUser,
+                id,
+                title);
+        University.getInstance().addJournalRequest(request);
+        currentUser.addNotification("Journal request submitted: " + title + " (" + id + ")");
+        University.getInstance().getLogService().log(currentUser, "Submitted journal request " + request.getRequestId());
+        System.out.println(I18n.f("created.journal.request", AppFormatter.journalRequest(request)));
     }
 
     private static void publishPaper(Scanner scanner, User currentUser) {
@@ -111,11 +130,28 @@ public final class ResearchApp {
         if (journal == null) {
             return;
         }
-        String id = ConsoleInput.readLine(scanner, I18n.t("paper.id"));
-        String title = ConsoleInput.readLine(scanner, I18n.t("paper.title"));
+        String id = readRequiredLine(scanner, I18n.t("paper.id"));
+        if (id == null) {
+            return;
+        }
+        String title = readRequiredLine(scanner, I18n.t("paper.title"));
+        if (title == null) {
+            return;
+        }
         int citations = ConsoleInput.readInt(scanner, I18n.t("paper.citations"));
+        if (citations < 0) {
+            System.out.println(I18n.t("paper.citations.nonnegative"));
+            return;
+        }
         int pages = ConsoleInput.readInt(scanner, I18n.t("paper.pages"));
-        String doi = ConsoleInput.readLine(scanner, I18n.t("paper.doi"));
+        if (pages <= 0) {
+            System.out.println(I18n.t("paper.pages.positive"));
+            return;
+        }
+        String doi = readRequiredLine(scanner, I18n.t("paper.doi"));
+        if (doi == null) {
+            return;
+        }
         ResearchPaper p1 = paper(id, title, citations, pages, Calendar.getInstance().get(Calendar.YEAR), doi);
         try {
             University.getInstance().getJournalService().publishPaper(researcher, p1, journal);
@@ -148,11 +184,7 @@ public final class ResearchApp {
         }
     }
 
-    private static void assignSupervisor(Scanner scanner) {
-        GraduateStudent graduateStudent = selectGraduateStudent(scanner);
-        if (graduateStudent == null) {
-            return;
-        }
+    private static void setSupervisor(Scanner scanner, GraduateStudent graduateStudent) {
         ResearcherProfile researcher = selectResearcherProfile(scanner);
         if (researcher == null) {
             return;
@@ -162,7 +194,7 @@ public final class ResearchApp {
             return;
         }
         try {
-            University.getInstance().getResearchService().assignSupervisor(graduateStudent, researcher);
+            University.getInstance().getResearchService().setSupervisor(graduateStudent, researcher);
             System.out.println(I18n.f("supervisor.assigned", researcher.getResearcherName()));
         } catch (RuntimeException e) {
             System.out.println(e.getMessage());
@@ -175,8 +207,14 @@ public final class ResearchApp {
             System.out.println(I18n.t("no.researcher"));
             return;
         }
-        String id = ConsoleInput.readLine(scanner, I18n.t("project.id"));
-        String topic = ConsoleInput.readLine(scanner, I18n.t("project.topic"));
+        String id = readRequiredLine(scanner, I18n.t("project.id"));
+        if (id == null) {
+            return;
+        }
+        String topic = readRequiredLine(scanner, I18n.t("project.topic"));
+        if (topic == null) {
+            return;
+        }
         ResearchProject project = new ResearchProject(id, topic);
         User owner = researcher.getOwner();
         University.getInstance().getResearchService().joinProject(owner, project);
@@ -194,14 +232,17 @@ public final class ResearchApp {
         System.out.println(I18n.f("student.notifications", currentUser.getNotifications()));
     }
 
-    private static void generateTopCitedResearcherNews(Scanner scanner) {
-        String school = readRequiredLine(scanner, I18n.t("school"));
-        if (school == null) {
-            return;
+    private static void showMyJournalRequests(User currentUser) {
+        boolean found = false;
+        for (JournalRequest request : University.getInstance().getJournalRequests()) {
+            if (currentUser.equals(request.getRequester())) {
+                found = true;
+                System.out.println(AppFormatter.journalRequest(request));
+            }
         }
-        int year = ConsoleInput.readInt(scanner, I18n.t("year"));
-        System.out.println(I18n.f("top.cited.news.generated",
-                University.getInstance().getNewsService().generateTopCitedResearcherNews(school, year)));
+        if (!found) {
+            System.out.println(I18n.t("no.my.journal.requests"));
+        }
     }
 
     private static void addDiplomaProject(Scanner scanner, GraduateStudent graduateStudent) {
@@ -214,8 +255,20 @@ public final class ResearchApp {
             return;
         }
         int citations = ConsoleInput.readInt(scanner, I18n.t("paper.citations"));
+        if (citations < 0) {
+            System.out.println(I18n.t("paper.citations.nonnegative"));
+            return;
+        }
         int pages = ConsoleInput.readInt(scanner, I18n.t("paper.pages"));
+        if (pages <= 0) {
+            System.out.println(I18n.t("paper.pages.positive"));
+            return;
+        }
         int year = ConsoleInput.readInt(scanner, I18n.t("year"));
+        if (year <= 1900) {
+            System.out.println(I18n.t("year.invalid"));
+            return;
+        }
         String doi = readRequiredLine(scanner, I18n.t("paper.doi"));
         if (doi == null) {
             return;
@@ -269,28 +322,6 @@ public final class ResearchApp {
         return null;
     }
 
-    private static GraduateStudent selectGraduateStudent(Scanner scanner) {
-        boolean hasGraduateStudent = false;
-        for (User user : University.getInstance().getUsers()) {
-            if (user instanceof GraduateStudent) {
-                hasGraduateStudent = true;
-                System.out.println(user.getId() + " - " + user.getName());
-            }
-        }
-        if (!hasGraduateStudent) {
-            System.out.println(I18n.t("no.graduate.student"));
-            return null;
-        }
-        String studentId = ConsoleInput.readLine(scanner, I18n.t("student.id"));
-        for (User user : University.getInstance().getUsers()) {
-            if (user instanceof GraduateStudent && user.getId().equals(studentId)) {
-                return (GraduateStudent) user;
-            }
-        }
-        System.out.println(I18n.t("no.graduate.student"));
-        return null;
-    }
-
     private static ResearcherProfile selectResearcherProfile(Scanner scanner) {
         boolean hasResearcher = false;
         for (User user : University.getInstance().getUsers()) {
@@ -320,6 +351,16 @@ public final class ResearchApp {
             return null;
         }
         return value;
+    }
+
+    private static boolean pendingJournalRequestExists(String journalId) {
+        for (JournalRequest request : University.getInstance().getJournalRequests()) {
+            if (request.getStatus() == university.enums.RegistrationStatus.PENDING
+                    && request.getJournalId().equalsIgnoreCase(journalId)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 

@@ -18,8 +18,8 @@ import university.users.User;
 public class ResearchService implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    public void assignSupervisor(GraduateStudent student, Researcher supervisor) {
-        student.assignSupervisor(supervisor);
+    public void setSupervisor(GraduateStudent student, Researcher supervisor) {
+        student.setSupervisor(supervisor);
     }
 
     public void joinProject(User user, ResearchProject project) {

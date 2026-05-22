@@ -24,7 +24,7 @@ public class GraduateStudent extends Student {
         setResearcherProfile(new ResearcherProfile("RP-" + id, this, "Graduate School"));
     }
 
-    public void assignSupervisor(Researcher supervisor) {
+    public void setSupervisor(Researcher supervisor) {
         int hIndex = supervisor.calculateHIndex();
         if (hIndex < 3) {
             throw new LowHIndexException(hIndex);

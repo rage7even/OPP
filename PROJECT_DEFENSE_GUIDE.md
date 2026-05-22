@@ -884,7 +884,7 @@ Important behavior:
 
 ```text
 Constructor creates ResearcherProfile.
-assignSupervisor() checks supervisor h-index >= 3.
+setSupervisor() checks supervisor h-index >= 3.
 ```
 
 ### Teacher

@@ -256,6 +256,7 @@ class University <<singleton>> {
   -courses: List~Course~
   -courseOfferings: List~CourseOffering~
   -journals: List~Journal~
+  -journalRequests: List~JournalRequest~
   -newsFeed: List~NewsItem~
   -supportRequests: List~SupportRequest~
 
@@ -360,7 +361,7 @@ class GraduateStudent extends Student {
   -degree: DegreeType
   -supervisor: Researcher
   -diplomaProjects: List~ResearchPaper~
-  +assignSupervisor(r: Researcher): void throws LowHIndexException
+  +setSupervisor(r: Researcher): void throws LowHIndexException
 }
 
 class Teacher extends Employee {
@@ -524,6 +525,16 @@ class Journal {
 }
 Subject <|.. Journal
 
+class JournalRequest {
+  -requestId: String
+  -requester: User
+  -journalId: String
+  -journalTitle: String
+  -status: RegistrationStatus
+  +approve(): void
+  +reject(): void
+}
+
 ResearchProject ..> DuplicateParticipantException
 GraduateStudent ..> LowHIndexException
 ResearchPaper ..> CitationFormatterFactory
@@ -538,7 +549,7 @@ Observer <|.. NewsService
 
 ' ===================== SERVICES =====================
 class ResearchService {
-  +assignSupervisor(student: GraduateStudent, supervisor: Researcher): void throws LowHIndexException
+  +setSupervisor(student: GraduateStudent, supervisor: Researcher): void throws LowHIndexException
   +joinProject(user: User, project: ResearchProject): void throws NotResearcherException, DuplicateParticipantException
   +getTopCitedResearcher(school: String, year: int): ResearcherProfile
   +printAllResearchPapers(strategy: PaperSortStrategy): void
@@ -667,6 +678,7 @@ University "1" o-- "0..*" User
 University "1" o-- "0..*" Course
 University "1" o-- "0..*" CourseOffering
 University "1" o-- "0..*" Journal
+University "1" o-- "0..*" JournalRequest
 University "1" o-- "0..*" SupportRequest
 University "1" o-- "0..*" NewsItem
 
@@ -716,8 +728,9 @@ ResearchProject "1" o-- "0..*" Researcher : participants
 ResearchProject "1" o-- "0..*" ResearchPaper : publishedPapers
 ResearchPaper "1" -- "1..*" Researcher : authors
 ResearchPaper "1" --> "1" Journal : journal
+JournalRequest "1" --> "1" User : requester
 
-GraduateStudent "1" --> "1" Researcher : supervisor
+GraduateStudent "1" --> "0..1" Researcher : supervisor
 GraduateStudent "1" o-- "0..*" ResearchPaper : diplomaProjects
 
 Journal "1" o-- "0..*" Observer : subscribers

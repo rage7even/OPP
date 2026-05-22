@@ -12,6 +12,7 @@ import university.news.NewsItem;
 import university.patterns.Observer;
 import university.reports.LogEntry;
 import university.research.Journal;
+import university.research.JournalRequest;
 import university.services.AuthService;
 import university.services.CourseRegistrationService;
 import university.services.FileUniversityDataStore;
@@ -44,6 +45,7 @@ public class University implements Serializable {
     private List<Message> messages;
     private List<StudentOrganization> studentOrganizations;
     private List<StudentOrganizationRequest> studentOrganizationRequests;
+    private List<JournalRequest> journalRequests;
 
     private transient AuthService authService;
     private transient CourseRegistrationService registrationService;
@@ -68,6 +70,7 @@ public class University implements Serializable {
         messages = new ArrayList<Message>();
         studentOrganizations = new ArrayList<StudentOrganization>();
         studentOrganizationRequests = new ArrayList<StudentOrganizationRequest>();
+        journalRequests = new ArrayList<JournalRequest>();
         rebuildServices();
     }
 
@@ -94,6 +97,7 @@ public class University implements Serializable {
         messages = loaded.messages;
         studentOrganizations = loaded.studentOrganizations;
         studentOrganizationRequests = loaded.studentOrganizationRequests;
+        journalRequests = loaded.journalRequests;
         rebuildServices();
         reconnectJournalServices();
     }
@@ -109,6 +113,7 @@ public class University implements Serializable {
         messageList().clear();
         organizationList().clear();
         organizationRequestList().clear();
+        journalRequestList().clear();
     }
 
     private void rebuildServices() {
@@ -208,6 +213,12 @@ public class University implements Serializable {
         }
     }
 
+    public void addJournalRequest(JournalRequest request) {
+        if (request != null && !journalRequestList().contains(request)) {
+            journalRequestList().add(request);
+        }
+    }
+
     public List<User> getUsers() {
         return users;
     }
@@ -246,6 +257,10 @@ public class University implements Serializable {
 
     public List<StudentOrganizationRequest> getStudentOrganizationRequests() {
         return Collections.unmodifiableList(organizationRequestList());
+    }
+
+    public List<JournalRequest> getJournalRequests() {
+        return Collections.unmodifiableList(journalRequestList());
     }
 
     public AuthService getAuthService() {
@@ -307,5 +322,12 @@ public class University implements Serializable {
             studentOrganizationRequests = new ArrayList<StudentOrganizationRequest>();
         }
         return studentOrganizationRequests;
+    }
+
+    private List<JournalRequest> journalRequestList() {
+        if (journalRequests == null) {
+            journalRequests = new ArrayList<JournalRequest>();
+        }
+        return journalRequests;
     }
 }

@@ -11,12 +11,15 @@ import university.employees.Manager;
 import university.employees.Teacher;
 import university.enums.CourseType;
 import university.enums.LessonType;
+import university.enums.RegistrationStatus;
 import university.enums.Urgency;
 import university.news.NewsItem;
 import university.patterns.SortStudentByGpaStrategy;
 import university.patterns.SortStudentByNameStrategy;
 import university.patterns.SortTeacherByNameStrategy;
 import university.patterns.SortTeacherByRatingStrategy;
+import university.research.Journal;
+import university.research.JournalRequest;
 import university.users.StudentOrganization;
 import university.users.StudentOrganizationRequest;
 
@@ -37,6 +40,11 @@ public final class ManagerApp {
             System.out.println(I18n.t("manager.organization.requests"));
             System.out.println(I18n.t("manager.organization.approve"));
             System.out.println(I18n.t("manager.organization.reject"));
+            System.out.println(I18n.t("manager.top.cited.news"));
+            System.out.println(I18n.t("manager.create.journal"));
+            System.out.println(I18n.t("manager.show.journal.requests"));
+            System.out.println(I18n.t("manager.approve.journal.request"));
+            System.out.println(I18n.t("manager.reject.journal.request"));
             System.out.println(I18n.t("back"));
 
             int choice = ConsoleInput.readInt(scanner, I18n.t("choose"));
@@ -70,6 +78,21 @@ public final class ManagerApp {
                     break;
                 case 10:
                     rejectOrganizationRequest(scanner, manager);
+                    break;
+                case 11:
+                    generateTopCitedResearcherNews(scanner);
+                    break;
+                case 12:
+                    createJournal(scanner);
+                    break;
+                case 13:
+                    showJournalRequests();
+                    break;
+                case 14:
+                    approveJournalRequest(scanner, manager);
+                    break;
+                case 15:
+                    rejectJournalRequest(scanner, manager);
                     break;
                 case 0:
                     return;
@@ -268,6 +291,77 @@ public final class ManagerApp {
         System.out.println(I18n.f("rejected.organization.request", AppFormatter.studentOrganizationRequest(request)));
     }
 
+    private static void generateTopCitedResearcherNews(Scanner scanner) {
+        String school = ConsoleInput.readLine(scanner, I18n.t("school")).trim();
+        if (school.isEmpty()) {
+            System.out.println(I18n.t("required.field"));
+            return;
+        }
+        int year = ConsoleInput.readInt(scanner, I18n.t("year"));
+        System.out.println(I18n.f("top.cited.news.generated",
+                University.getInstance().getNewsService().generateTopCitedResearcherNews(school, year)));
+    }
+
+    private static void createJournal(Scanner scanner) {
+        String journalId = ConsoleInput.readLine(scanner, I18n.t("journal.id")).trim();
+        if (journalId.isEmpty()) {
+            System.out.println(I18n.t("required.field"));
+            return;
+        }
+        if (findJournal(journalId) != null) {
+            System.out.println(I18n.t("duplicate.journal"));
+            return;
+        }
+        String title = ConsoleInput.readLine(scanner, I18n.t("journal.title")).trim();
+        if (title.isEmpty()) {
+            System.out.println(I18n.t("required.field"));
+            return;
+        }
+        Journal journal = new Journal(journalId, title);
+        University.getInstance().addJournal(journal);
+        System.out.println(I18n.f("created.journal", journal));
+    }
+
+    private static void showJournalRequests() {
+        if (University.getInstance().getJournalRequests().isEmpty()) {
+            System.out.println(I18n.t("no.journal.requests"));
+            return;
+        }
+        for (JournalRequest request : University.getInstance().getJournalRequests()) {
+            System.out.println(AppFormatter.journalRequest(request));
+        }
+    }
+
+    private static void approveJournalRequest(Scanner scanner, Manager manager) {
+        JournalRequest request = selectPendingJournalRequest(scanner);
+        if (request == null) {
+            return;
+        }
+        if (findJournal(request.getJournalId()) != null) {
+            System.out.println(I18n.t("duplicate.journal"));
+            return;
+        }
+        Journal journal = new Journal(request.getJournalId(), request.getJournalTitle());
+        University.getInstance().addJournal(journal);
+        request.approve();
+        request.getRequester().addNotification(
+                "Journal request approved: " + request.getJournalTitle() + " (" + request.getJournalId() + ")");
+        University.getInstance().getLogService().log(manager, "Approved journal request " + request.getRequestId());
+        System.out.println(I18n.f("approved.journal.request", AppFormatter.journalRequest(request)));
+    }
+
+    private static void rejectJournalRequest(Scanner scanner, Manager manager) {
+        JournalRequest request = selectPendingJournalRequest(scanner);
+        if (request == null) {
+            return;
+        }
+        request.reject();
+        request.getRequester().addNotification(
+                "Journal request rejected: " + request.getJournalTitle() + " (" + request.getJournalId() + ")");
+        University.getInstance().getLogService().log(manager, "Rejected journal request " + request.getRequestId());
+        System.out.println(I18n.f("rejected.journal.request", AppFormatter.journalRequest(request)));
+    }
+
     private static Urgency readUrgency(Scanner scanner) {
         System.out.println("1 - LOW, 2 - MEDIUM, 3 - HIGH");
         int urgencyNumber = ConsoleInput.readIntInRange(scanner, I18n.t("choose"), 1, 3);
@@ -306,6 +400,39 @@ public final class ManagerApp {
         for (university.users.Student student : students) {
             if (student.getId().equals(studentId)) {
                 return student;
+            }
+        }
+        return null;
+    }
+
+    private static JournalRequest selectPendingJournalRequest(Scanner scanner) {
+        java.util.List<JournalRequest> pending = new java.util.ArrayList<JournalRequest>();
+        for (JournalRequest request : University.getInstance().getJournalRequests()) {
+            if (request.getStatus() == RegistrationStatus.PENDING) {
+                pending.add(request);
+            }
+        }
+        if (pending.isEmpty()) {
+            System.out.println(I18n.t("no.pending.journal.requests"));
+            return null;
+        }
+        for (JournalRequest request : pending) {
+            System.out.println(AppFormatter.journalRequest(request));
+        }
+        String requestId = ConsoleInput.readLine(scanner, I18n.t("journal.request.id"));
+        for (JournalRequest request : pending) {
+            if (request.getRequestId().equals(requestId)) {
+                return request;
+            }
+        }
+        System.out.println(I18n.t("no.journal.request"));
+        return null;
+    }
+
+    private static Journal findJournal(String journalId) {
+        for (Journal journal : University.getInstance().getJournals()) {
+            if (journal.getJournalId().equalsIgnoreCase(journalId)) {
+                return journal;
             }
         }
         return null;

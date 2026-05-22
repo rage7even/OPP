@@ -5,6 +5,7 @@ import university.education.CourseOffering;
 import university.education.Enrollment;
 import university.education.Mark;
 import university.enums.RegistrationStatus;
+import university.research.JournalRequest;
 import university.support.SupportRequest;
 import university.users.Student;
 import university.users.StudentOrganization;
@@ -82,6 +83,20 @@ public final class AppFormatter {
                 + I18n.registrationStatus(request.getStatus())
                 + ", "
                 + request.getDescription();
+    }
+
+    public static String journalRequest(JournalRequest request) {
+        return request.getRequestId()
+                + " - "
+                + request.getRequester().getName()
+                + ", "
+                + request.getJournalId()
+                + ", "
+                + request.getJournalTitle()
+                + ", "
+                + I18n.t("status")
+                + ": "
+                + I18n.registrationStatus(request.getStatus());
     }
 
     private static int approvedCount(CourseOffering offering) {

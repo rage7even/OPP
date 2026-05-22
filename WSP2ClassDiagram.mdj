@@ -3551,7 +3551,7 @@
 											"_parent": {
 												"$ref": "id_GraduateStudent"
 											},
-											"name": "assignSupervisor",
+											"name": "setSupervisor",
 											"parameters": [
 												{
 													"_type": "UMLParameter",
@@ -5770,7 +5770,7 @@
 											"_parent": {
 												"$ref": "id_ResearchService"
 											},
-											"name": "assignSupervisor",
+											"name": "setSupervisor",
 											"parameters": [
 												{
 													"_type": "UMLParameter",
@@ -8674,7 +8674,7 @@
 										"reference": {
 											"$ref": "id_Researcher"
 										},
-										"multiplicity": "1"
+										"multiplicity": "0..1"
 									}
 								},
 								{
@@ -11984,7 +11984,7 @@
 													"top": 10122,
 													"width": 195.71435546875,
 													"height": 13,
-													"text": "+assignSupervisor(r: Researcher)",
+													"text": "+setSupervisor(r: Researcher)",
 													"horizontalAlignment": 0
 												}
 											],
@@ -26143,7 +26143,7 @@
 													"top": 6655,
 													"width": 424.06494140625,
 													"height": 13,
-													"text": "+assignSupervisor(student: GraduateStudent, supervisor: Researcher)",
+													"text": "+setSupervisor(student: GraduateStudent, supervisor: Researcher)",
 													"horizontalAlignment": 0
 												},
 												{
