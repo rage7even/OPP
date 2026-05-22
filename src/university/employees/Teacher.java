@@ -9,6 +9,7 @@ import university.education.Course;
 import university.education.Enrollment;
 import university.education.Lesson;
 import university.education.Mark;
+import university.enums.RegistrationStatus;
 import university.enums.TeacherPosition;
 import university.enums.Urgency;
 import university.exceptions.UnauthorizedActionException;
@@ -44,6 +45,10 @@ public class Teacher extends Employee {
         }
     }
 
+    public void unassignCourse(Course course) {
+        courses.remove(course);
+    }
+
     public void promoteToProfessor() {
         position = TeacherPosition.PROFESSOR;
         if (getResearcherProfile() == null) {
@@ -54,6 +59,9 @@ public class Teacher extends Employee {
     public void putMark(Enrollment enrollment, Mark mark) {
         if (!teaches(enrollment.getOffering().getCourse())) {
             throw new UnauthorizedActionException("put mark for course not assigned to teacher");
+        }
+        if (enrollment.getStatus() != RegistrationStatus.APPROVED) {
+            throw new UnauthorizedActionException("cannot put mark for non-approved enrollment");
         }
         enrollment.setMark(mark);
     }

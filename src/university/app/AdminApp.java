@@ -79,6 +79,10 @@ public final class AdminApp {
         }
         String name = ConsoleInput.readLine(scanner, I18n.t("name"));
         String email = ConsoleInput.readLine(scanner, I18n.t("email"));
+        if (emailExists(email)) {
+            System.out.println(I18n.t("duplicate.email"));
+            return;
+        }
         String password = ConsoleInput.readLine(scanner, I18n.t("password"));
 
         DefaultUserFactory factory = new DefaultUserFactory();
@@ -193,6 +197,15 @@ public final class AdminApp {
         return false;
     }
 
+    private static boolean emailExists(String email) {
+        for (User user : University.getInstance().getUsers()) {
+            if (user.getEmail().equalsIgnoreCase(email)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static boolean printTeachers() {
         boolean found = false;
         for (User user : University.getInstance().getUsers()) {
@@ -228,4 +241,3 @@ public final class AdminApp {
         }
     }
 }
-

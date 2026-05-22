@@ -12,7 +12,9 @@ import university.education.Lesson;
 import university.education.Mark;
 import university.employees.Teacher;
 import university.enums.LessonType;
+import university.enums.RegistrationStatus;
 import university.exceptions.TooManyFailsException;
+import university.exceptions.UnauthorizedActionException;
 
 public class Student extends User {
     private static final long serialVersionUID = 1L;
@@ -75,6 +77,12 @@ public class Student extends User {
     }
 
     public void rateTeacher(Teacher teacher, int rating) {
+        if (rating < 1 || rating > 5) {
+            throw new IllegalArgumentException("rating must be between 1 and 5");
+        }
+        if (!hasApprovedEnrollmentWith(teacher)) {
+            throw new UnauthorizedActionException("cannot rate teacher without approved enrollment");
+        }
         teacher.addRating(new TeacherRating("R-" + getId() + "-" + teacher.getId(), this, teacher, rating));
     }
 
@@ -147,5 +155,19 @@ public class Student extends User {
 
     void leaveOrganization(StudentOrganization organization) {
         organizations.remove(organization);
+    }
+
+    private boolean hasApprovedEnrollmentWith(Teacher teacher) {
+        for (Enrollment enrollment : enrollments) {
+            if (enrollment.getStatus() != RegistrationStatus.APPROVED) {
+                continue;
+            }
+            for (Lesson lesson : enrollment.getOffering().getCourse().getLessons()) {
+                if (teacher.equals(lesson.getInstructor())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

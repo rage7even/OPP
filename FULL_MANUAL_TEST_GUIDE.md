@@ -46,7 +46,7 @@ Run Main.java
 IDE build is enough for this guide. If terminal javac is missing, rebuild and run from Eclipse/IDEA.
 ```
 
-### 0.2 Проверка С Нуля
+### 0.2 Проверка С Нуля 
 
 Если хочешь начать полностью с нуля, перед запуском можно удалить или
 переименовать файл:
@@ -1692,7 +1692,7 @@ Diploma project saved: ...
 Now show saved diploma projects:
 
 ```text
-10
+10  
 ```
 
 Expected:

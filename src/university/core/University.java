@@ -140,6 +140,12 @@ public class University implements Serializable {
     }
 
     public void addUser(User user) {
+        for (User existingUser : users) {
+            if (existingUser.getEmail().equalsIgnoreCase(user.getEmail())
+                    && !existingUser.getId().equals(user.getId())) {
+                throw new IllegalStateException("user with this email already exists: " + user.getEmail());
+            }
+        }
         removeUser(user.getId());
         users.add(user);
     }

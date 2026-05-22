@@ -33,6 +33,16 @@ public class Manager extends Employee {
 
     public void assignCourseToTeacher(Course course, LessonType lessonType, Teacher teacher) {
         teacher.assignCourse(course);
+        for (Lesson lesson : course.getLessons()) {
+            if (lesson.getType() == lessonType) {
+                Teacher previousTeacher = lesson.getInstructor();
+                if (previousTeacher != null && !previousTeacher.equals(teacher)) {
+                    previousTeacher.unassignCourse(course);
+                }
+                lesson.setInstructor(teacher);
+                return;
+            }
+        }
         course.addLesson(new Lesson(lessonType, new java.util.Date(), teacher));
     }
 
@@ -45,7 +55,20 @@ public class Manager extends Employee {
     }
 
     public CourseOffering addCourseForRegistration(Course course, String major, int year) {
-        CourseOffering offering = new CourseOffering("OFF-" + course.getCourseId() + "-" + year, course, major, year);
+        Course linkedCourse = course;
+        for (Course existingCourse : University.getInstance().getCourses()) {
+            if (existingCourse.equals(course)) {
+                linkedCourse = existingCourse;
+                break;
+            }
+        }
+        String offeringId = "OFF-" + linkedCourse.getCourseId() + "-" + year;
+        for (CourseOffering existingOffering : University.getInstance().getCourseOfferings()) {
+            if (existingOffering.getOfferingId().equals(offeringId)) {
+                throw new IllegalStateException("course offering already exists: " + offeringId);
+            }
+        }
+        CourseOffering offering = new CourseOffering(offeringId, linkedCourse, major, year);
         University.getInstance().addCourseOffering(offering);
         return offering;
     }

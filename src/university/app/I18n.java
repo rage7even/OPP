@@ -148,6 +148,7 @@ public final class I18n {
             case "teacher.position": return "Teacher position: 1-TUTOR, 2-LECTOR, 3-SENIOR_LECTOR, 4-PROFESSOR";
             case "invalid.role": return "Invalid role.";
             case "duplicate.user": return "User with this id already exists. Use another id.";
+            case "duplicate.email": return "User with this email already exists.";
             case "id": return "Id:";
             case "name": return "Name:";
             case "email": return "Email:";
@@ -207,6 +208,8 @@ public final class I18n {
             case "credits": return "Credits:";
             case "credits.word": return "credits";
             case "capacity": return "Capacity:";
+            case "duplicate.course": return "Course with this id already exists.";
+            case "duplicate.offering": return "Course offering with this id already exists.";
             case "major": return "Major";
             case "year": return "Year";
             case "student.id": return "Student id:";
@@ -379,6 +382,7 @@ public final class I18n {
             case "teacher.position": return "Позиция преподавателя: 1-TUTOR, 2-LECTOR, 3-SENIOR_LECTOR, 4-PROFESSOR";
             case "invalid.role": return "Неверная роль.";
             case "duplicate.user": return "Пользователь с таким id уже существует. Введите другой id.";
+            case "duplicate.email": return "Пользователь с таким email уже существует.";
             case "id": return "Id:";
             case "name": return "Имя:";
             case "email": return "Email:";
@@ -438,6 +442,8 @@ public final class I18n {
             case "credits": return "Кредиты:";
             case "credits.word": return "кредитов";
             case "capacity": return "Вместимость:";
+            case "duplicate.course": return "Курс с таким id уже существует.";
+            case "duplicate.offering": return "Предложение курса с таким id уже существует.";
             case "major": return "Специальность";
             case "year": return "Год";
             case "student.id": return "Id студента:";
@@ -609,6 +615,7 @@ public final class I18n {
             case "teacher.position": return "Оқытушы позициясы: 1-TUTOR, 2-LECTOR, 3-SENIOR_LECTOR, 4-PROFESSOR";
             case "invalid.role": return "Рөл дұрыс емес.";
             case "duplicate.user": return "Бұл id бар пайдаланушы бар. Басқа id енгізіңіз.";
+            case "duplicate.email": return "Осындай email бар пайдаланушы бұрыннан бар.";
             case "id": return "Id:";
             case "name": return "Аты:";
             case "email": return "Email:";
@@ -668,6 +675,8 @@ public final class I18n {
             case "credits": return "Кредиттер:";
             case "credits.word": return "кредит";
             case "capacity": return "Орын саны:";
+            case "duplicate.course": return "Бұл id бар курс бұрыннан бар.";
+            case "duplicate.offering": return "Бұл id бар курс ұсынысы бұрыннан бар.";
             case "major": return "Мамандық";
             case "year": return "Жыл";
             case "student.id": return "Студент id:";

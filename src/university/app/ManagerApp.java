@@ -82,6 +82,10 @@ public final class ManagerApp {
 
     private static void addCourse(Scanner scanner, Manager manager) {
         String id = ConsoleInput.readLine(scanner, I18n.t("course.id"));
+        if (findCourse(id) != null) {
+            System.out.println(I18n.t("duplicate.course"));
+            return;
+        }
         String name = ConsoleInput.readLine(scanner, I18n.t("course.name"));
         int credits = ConsoleInput.readInt(scanner, I18n.t("credits"));
         System.out.println(I18n.t("course.type"));
@@ -89,9 +93,17 @@ public final class ManagerApp {
         int capacity = ConsoleInput.readInt(scanner, I18n.t("capacity"));
         String major = ConsoleInput.readLine(scanner, I18n.t("major"));
         int year = ConsoleInput.readInt(scanner, I18n.t("year"));
+        if (findOffering("OFF-" + id + "-" + year) != null) {
+            System.out.println(I18n.t("duplicate.offering"));
+            return;
+        }
         Course course = new Course(id, name, credits, type, capacity);
         University.getInstance().addCourse(course);
-        System.out.println(I18n.f("added.course", AppFormatter.offering(manager.addCourseForRegistration(course, major, year))));
+        try {
+            System.out.println(I18n.f("added.course", AppFormatter.offering(manager.addCourseForRegistration(course, major, year))));
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     private static void assignPracticeTeacher(Scanner scanner, Manager manager) {
@@ -141,6 +153,15 @@ public final class ManagerApp {
         for (Course course : University.getInstance().getCourses()) {
             if (course.getCourseId().equals(courseId)) {
                 return course;
+            }
+        }
+        return null;
+    }
+
+    private static university.education.CourseOffering findOffering(String offeringId) {
+        for (university.education.CourseOffering offering : University.getInstance().getCourseOfferings()) {
+            if (offering.getOfferingId().equals(offeringId)) {
+                return offering;
             }
         }
         return null;
