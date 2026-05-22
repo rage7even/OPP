@@ -4,7 +4,9 @@ import university.education.Course;
 import university.education.CourseOffering;
 import university.education.Enrollment;
 import university.education.Mark;
+import university.enums.RegistrationStatus;
 import university.support.SupportRequest;
+import university.users.Student;
 import university.users.StudentOrganization;
 import university.users.StudentOrganizationRequest;
 
@@ -19,9 +21,13 @@ public final class AppFormatter {
     }
 
     public static String offering(CourseOffering offering) {
+        int freeSeats = offering.getCourse().getCapacity();
+        int occupiedSeats = approvedCount(offering);
+        int totalSeats = freeSeats + occupiedSeats;
         return offering.getOfferingId() + " - " + course(offering.getCourse())
                 + ", " + I18n.t("major") + ": " + offering.getMajor()
-                + ", " + I18n.t("year") + ": " + offering.getYear();
+                + ", " + I18n.t("year") + ": " + offering.getYear()
+                + ", seats: " + totalSeats + " total, " + occupiedSeats + " occupied, " + freeSeats + " free";
     }
 
     public static String enrollment(Enrollment enrollment) {
@@ -76,6 +82,19 @@ public final class AppFormatter {
                 + I18n.registrationStatus(request.getStatus())
                 + ", "
                 + request.getDescription();
+    }
+
+    private static int approvedCount(CourseOffering offering) {
+        int count = 0;
+        for (Student student : AppData.students()) {
+            for (Enrollment enrollment : student.getEnrollments()) {
+                if (offering.equals(enrollment.getOffering())
+                        && enrollment.getStatus() == RegistrationStatus.APPROVED) {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 }
 
