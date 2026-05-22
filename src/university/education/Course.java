@@ -42,7 +42,7 @@ public class Course implements Serializable {
                 Mark mark = enrollment.getMark();
                 if (enrollment.getOffering().getCourse().equals(prerequisite)
                         && enrollment.getStatus() == RegistrationStatus.APPROVED
-                        && mark != null && mark.getFinalGrade() >= 50) {
+                        && mark != null && mark.isPassed()) {
                     passed = true;
                     break;
                 }

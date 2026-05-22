@@ -1052,6 +1052,14 @@ Final max = 40
 Maximum total = 100
 ```
 
+FX / Fail edge cases:
+
+```text
+A1=25.0, A2=25.0, Final=19.5 -> Grade=69.5, Letter=FX
+A1=25.0, A2=24.5, Final=0.0 -> Grade=49.5, Letter=Fail
+A1=30.0, A2=20.0, Final=9.4 -> Grade=59.4, Letter=Fail
+```
+
 Negative test:
 
 ```text
@@ -2393,6 +2401,18 @@ Create courses with total credits above 21 and try to register student.
 Credit limit exceeded...
 ```
 
+### 21.7 Too Many Fails Registration Block
+
+Prepare a student with `failCount = 4` in saved data or by repeating failing marks during test setup.
+
+Then try to register that student to any available course offering.
+
+Ожидаемый результат:
+
+```text
+Student cannot continue registration after more than 3 fails. Current fails: 4
+```
+
 ## 22. Service Coverage Checklist
 
 Use this table to mark what you tested.
@@ -2405,6 +2425,7 @@ Use this table to mark what you tested.
 | `UserManagementService` | Admin add/remove users | [ ] |
 | `DefaultUserFactory` | Create all roles | [ ] |
 | `CourseRegistrationService.register` | Student registers for offering | [ ] |
+| `TooManyFailsException` | Student with more than 3 fails tries to register again | [ ] |
 | `CourseRegistrationService.approve` | Manager approves enrollment | [ ] |
 | `CourseRegistrationService.reject` | Manager rejects enrollment | [ ] |
 | `StudentOrganizationRequest` | Student creates request, manager approves/rejects | [ ] |

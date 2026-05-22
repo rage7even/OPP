@@ -13,7 +13,6 @@ import university.education.Mark;
 import university.employees.Teacher;
 import university.enums.LessonType;
 import university.enums.RegistrationStatus;
-import university.exceptions.TooManyFailsException;
 import university.exceptions.UnauthorizedActionException;
 
 public class Student extends User {
@@ -88,9 +87,6 @@ public class Student extends User {
 
     public void recordFail() {
         failCount++;
-        if (failCount > 3) {
-            throw new TooManyFailsException(failCount);
-        }
     }
 
     public void removeFail() {

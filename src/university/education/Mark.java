@@ -34,8 +34,18 @@ public class Mark implements Serializable {
         return finalExam;
     }
 
+    public boolean isPassed() {
+        return getFinalGrade() >= 50 && finalExam >= 20;
+    }
+
     public String getLetterGrade() {
         double grade = getFinalGrade();
+        if (grade < 50 || finalExam < 9.5) {
+            return "Fail";
+        }
+        if (finalExam < 20) {
+            return "FX";
+        }
         if (grade >= 95) {
             return "A";
         }
@@ -63,10 +73,7 @@ public class Mark implements Serializable {
         if (grade >= 55) {
             return "D+";
         }
-        if (grade >= 50) {
-            return "D";
-        }
-        return "Fail";
+        return "D";
     }
 
     private void validateRange(String label, double value, double max) {
