@@ -1,6 +1,5 @@
-﻿package university.app;
+package university.app;
 
-import university.core.University;
 import university.enums.Language;
 import university.users.User;
 
@@ -12,7 +11,15 @@ final class AppLanguage {
 
     static void apply(Language language) {
         selectedLanguage = language == null ? Language.EN : language;
-        for (User user : University.getInstance().getUsers()) {
+    }
+
+    static void use(User user) {
+        selectedLanguage = user == null || user.getLanguage() == null ? Language.EN : user.getLanguage();
+    }
+
+    static void changeFor(User user, Language language) {
+        selectedLanguage = language == null ? Language.EN : language;
+        if (user != null) {
             user.changeLanguage(selectedLanguage);
         }
     }

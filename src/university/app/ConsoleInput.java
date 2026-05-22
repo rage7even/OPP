@@ -1,4 +1,4 @@
-﻿package university.app;
+package university.app;
 
 import java.util.Scanner;
 
@@ -15,6 +15,16 @@ public final class ConsoleInput {
             } catch (NumberFormatException e) {
                 System.out.println(I18n.t("enter.number"));
             }
+        }
+    }
+
+    public static int readIntInRange(Scanner scanner, String prompt, int minInclusive, int maxInclusive) {
+        while (true) {
+            int value = readInt(scanner, prompt);
+            if (value >= minInclusive && value <= maxInclusive) {
+                return value;
+            }
+            System.out.println(I18n.t("unknown.choice"));
         }
     }
 

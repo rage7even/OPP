@@ -41,8 +41,9 @@ Run Main.java
 Почему:
 
 ```text
-В терминале javac не найден, поэтому новые .java изменения нужно пересобрать
-через Eclipse.
+Проект можно пересобрать через Eclipse.
+Для terminal build на этой машине также найден javac:
+IDE build is enough for this guide. If terminal javac is missing, rebuild and run from Eclipse/IDEA.
 ```
 
 ### 0.2 Проверка С Нуля
@@ -104,7 +105,7 @@ Login as Admin -> Admin app -> 5 - Save data
 
 ```text
 1 - Қазақша
-2 - English
+2 - English (default)
 3 - Русский
 ```
 
@@ -113,6 +114,9 @@ Login as Admin -> Admin app -> 5 - Save data
 ```text
 2
 ```
+
+Если просто нажать Enter, программа выберет English по умолчанию.
+Если ввести число вне диапазона 1-3, программа попросит выбрать язык заново.
 
 Ожидаемый результат:
 
@@ -140,7 +144,7 @@ Password: admin
 Ожидаемый результат:
 
 ```text
-Logged in: Oren Admin
+Logged in: Admin
 ```
 
 Admin должен видеть:
@@ -149,6 +153,9 @@ Admin должен видеть:
 1 - Admin app
 5 - Support app
 6 - News app
+7 - Change language
+8 - Change password
+9 - Messages
 0 - Logout
 ```
 
@@ -173,6 +180,96 @@ Main role-based launcher
 Unauthorized access protection
 ```
 
+## 2.1 Change Language During Session
+
+После login язык можно менять прямо в launcher.
+
+Выбери:
+
+```text
+7 - Change language
+```
+
+Потом выбери язык:
+
+```text
+1 - Қазақша
+2 - English
+3 - Русский
+```
+
+Например, введи:
+
+```text
+3
+```
+
+Ожидаемый результат:
+
+```text
+Выбранный язык: Русский
+=== Запускатель WSP ===
+7 - Изменить язык
+0 - Выйти из аккаунта
+```
+
+Проверяет:
+
+```text
+Main.changeLanguage()
+AppLanguage.changeFor()
+User.changeLanguage()
+I18n runtime language switching
+```
+
+## 2.2 Change Password
+
+Any logged-in user can now change password directly from launcher:
+
+```text
+8 - Change password
+Current password: admin
+New password: admin2
+Confirm new password: admin2
+```
+
+Expected:
+
+```text
+Password changed.
+```
+
+Then logout and verify the new login:
+
+```text
+Email: admin@uni.kz
+Password: admin2
+```
+
+If you want the rest of this guide to stay unchanged, change the password back to `admin` right after this test.
+
+Negative test:
+
+```text
+Current password: wrong
+New password: x
+Confirm new password: x
+```
+
+Expected:
+
+```text
+Current password is incorrect.
+```
+
+Проверяет:
+
+```text
+Main.changePassword()
+User.changePassword()
+User.passwordMatches()
+```
+
 ## 3. Создать Всех Пользователей
 
 Войти:
@@ -190,6 +287,7 @@ Admin menu:
 4 - Show logs
 5 - Save data
 6 - Load data
+7 - Promote teacher to professor
 0 - Back
 ```
 
@@ -209,6 +307,11 @@ Id: M1
 Name: Dana Dean
 Email: dean@uni.kz
 Password: dean
+Manager type:
+1 - OR
+2 - DEPARTMENT
+3 - DEAN_OFFICE
+2
 ```
 
 Ожидаемый результат:
@@ -216,6 +319,10 @@ Password: dean
 ```text
 Added: Manager{M1, Dana Dean, dean@uni.kz}
 ```
+
+Тип manager хранится внутри объекта и не показывается в коротком выводе user.
+Чтобы отдельно проверить OR и DEAN_OFFICE, повтори шаг с новым id и выбери 1
+или 3.
 
 ### 3.2 Создать Teacher
 
@@ -225,6 +332,17 @@ Id: T1
 Name: Prof Assylzhan
 Email: prof@uni.kz
 Password: prof
+Teacher position: 4
+```
+
+Why `4 - PROFESSOR` is important:
+
+```text
+Only PROFESSOR teachers are auto-created with ResearcherProfile in the current
+console flow.
+The model itself allows any User to have a ResearcherProfile, but this menu
+does not expose a separate "become researcher" action for teachers.
+Assign supervisor requires a ResearcherProfile and h-index >= 3.
 ```
 
 Ожидаемый результат:
@@ -233,20 +351,47 @@ Password: prof
 Added: Teacher{T1, Prof Assylzhan, prof@uni.kz}
 ```
 
+### 3.2.1 Promote Existing Teacher To Professor
+
+Use this if your saved `data/university.ser` already has `T1` created as `LECTOR`.
+You do not need to delete `T1`.
+
+Admin app:
+
+```text
+7 - Promote teacher to professor
+Teacher id: T1
+```
+
+Expected:
+
+```text
+Promoted teacher to professor: Teacher{T1, Prof Assylzhan, prof@uni.kz}
+```
+
+What should happen:
+
+```text
+T1 keeps the same id/email/password/courses/ratings.
+T1 position becomes PROFESSOR.
+T1 gets ResearcherProfile.
+T1 can now open Research app.
+```
+
 ### 3.3 Создать Student
 
 ```text
 Role: 1
 Id: S1
 Name: Nursultan Student
-Email: nura@uni.kz
+Email: nurs@uni.kz
 Password: nurs
 ```
 
 Ожидаемый результат:
 
 ```text
-Added: Student{S1, Nursultan Student, student@uni.kz}
+Added: Student{S1, Nursultan Student, nurs@uni.kz}
 ```
 
 ### 3.4 Создать Graduate Student
@@ -257,6 +402,10 @@ Id: G1
 Name: Aruzhan Master
 Email: grad@uni.kz
 Password: grad
+Degree type:
+1 - MASTER
+2 - PHD
+1
 ```
 
 Ожидаемый результат:
@@ -266,6 +415,8 @@ Added: GraduateStudent{G1, Aruzhan Master, grad@uni.kz}
 ```
 
 GraduateStudent автоматически является Researcher.
+Тип degree хранится внутри объекта и не показывается в коротком выводе user.
+Чтобы отдельно проверить PHD, повтори шаг с новым id и выбери 2.
 
 ### 3.5 Создать Tech Support
 
@@ -310,10 +461,10 @@ User with this id already exists. Use another id.
 Ожидаемый результат:
 
 ```text
-Admin{A1, Oren Admin, admin@uni.kz}
+Admin{A1, Admin, admin@uni.kz}
 Manager{M1, Dana Dean, dean@uni.kz}
 Teacher{T1, Prof Assylzhan, prof@uni.kz}
-Student{S1, Nursultan Student, student@uni.kz}
+Student{S1, Nursultan Student, nurs@uni.kz}
 GraduateStudent{G1, Aruzhan Master, grad@uni.kz}
 TechSupportSpecialist{TS1, Aliya Support, support@uni.kz}
 ```
@@ -361,7 +512,7 @@ Teacher:
   prof@uni.kz / prof
 
 Student:
-  student@uni.kz / student
+  nurs@uni.kz / nurs
 
 Graduate Student:
   grad@uni.kz / grad
@@ -378,26 +529,47 @@ Manager:
   3 - Manager app
   5 - Support app
   6 - News app
+  7 - Change language
+  8 - Change password
+  9 - Messages
 
 Teacher:
   2 - Education app
+  4 - Research app
   5 - Support app
   6 - News app
+  7 - Change language
+  8 - Change password
+  9 - Messages
 
 Student:
   2 - Education app
   5 - Support app
   6 - News app
+  7 - Change language
+  8 - Change password
 
 Graduate Student:
   2 - Education app
   4 - Research app
   5 - Support app
   6 - News app
+  7 - Change language
+  8 - Change password
 
 Tech Support:
   5 - Support app
   6 - News app
+  7 - Change language
+  8 - Change password
+  9 - Messages
+```
+
+Note:
+
+```text
+Teacher sees 4 - Research app only if that teacher is professor/researcher.
+In this guide T1 is expected to be PROFESSOR.
 ```
 
 ## 5. Manager: Добавить Course Offering
@@ -419,10 +591,13 @@ dean
 Ввести:
 
 ```text
-Course id:  
+Course id:  CS101 
 Course name: Object-Oriented Programming
 Credits: 5
 Course type:
+  1 - MAJOR
+  2 - MINOR
+  3 - FREE_ELECTIVE
   1
 Capacity: 20
 Major: SITE
@@ -553,8 +728,8 @@ Logout manager.
 Login:
 
 ```text
-student@uni.kz
-student
+nurs@uni.kz
+nurs
 ```
 
 Открыть:
@@ -570,6 +745,11 @@ student
 2 - Register student for a course
 5 - Show transcript
 6 - Show course teachers
+7 - Rate teacher
+8 - Show student organizations
+9 - Join student organization
+10 - Leave student organization
+11 - Request new student organization
 0 - Back
 ```
 
@@ -637,6 +817,71 @@ OFF-CS101-2
 student already has an active registration for CS101
 ```
 
+### 8.4 Student Organizations
+
+Show current organizations:
+
+```text
+8
+```
+
+Expected:
+
+```text
+ORG-DEV - Developers Club, members=...
+ORG-DEBATE - Debate League, members=...
+```
+
+Join one:
+
+```text
+9
+Organization id: ORG-DEV
+```
+
+Expected:
+
+```text
+Joined organization: Developers Club
+```
+
+Leave it:
+
+```text
+10
+Organization id: ORG-DEV
+```
+
+Expected:
+
+```text
+Left organization: Developers Club
+```
+
+### 8.5 Request New Student Organization
+
+```text
+11
+Organization id: ORG-AI
+Organization name: AI Club
+Description: Student club for AI demos and hackathons
+```
+
+Expected:
+
+```text
+Organization request sent: ORGREQ-... - Nursultan Student, ORG-AI, AI Club, status: pending, Student club for AI demos and hackathons
+```
+
+Проверяет:
+
+```text
+StudentOrganization
+StudentOrganizationRequest
+Join / leave organization flow
+Pending organization request creation
+```
+
 ## 9. Manager: Approve Registration
 
 Logout student.
@@ -659,7 +904,7 @@ dean
 ```text
 1 - Show courses
 3 - Approve a pending registration
-7 - Reject a pending registration
+8 - Reject a pending registration
 0 - Back
 ```
 
@@ -681,6 +926,21 @@ ENR-...
 
 ```text
 Approved: ENR-... status: approved
+```
+
+Notification check:
+
+```text
+Login as nurs@uni.kz / nurs
+6 - News app
+8 - Show my notifications
+```
+
+Expected:
+
+```text
+Notifications:
+- Registration approved: Object-Oriented Programming (ENR-...)
 ```
 
 Проверяет:
@@ -771,15 +1031,37 @@ ENR-...
 Ввести:
 
 ```text
-Attestation 1: 80
-Attestation 2: 85
-Final exam: 90
+Attestation 1 (0-30): 30
+Attestation 2 (0-30): 30
+Final exam (0-40): 40
 ```
 
 Ожидаемый результат:
 
 ```text
-Mark saved: ...
+Mark saved: A1=30.0, A2=30.0, Final=40.0, Grade=100.0, Letter=A
+```
+
+Важно:
+
+```text
+Grade = A1 + A2 + Final
+A1 max = 30
+A2 max = 30
+Final max = 40
+Maximum total = 100
+```
+
+Negative test:
+
+```text
+Attestation 1 (0-30): 31
+```
+
+Ожидаемый результат:
+
+```text
+Attestation 1 must be between 0 and 30.0
 ```
 
 Проверяет:
@@ -788,8 +1070,8 @@ Mark saved: ...
 Teacher.putMark()
 Enrollment.setMark()
 Mark
+Mark.getLetterGrade()
 Student.recalculateGpa()
-TeacherRating auto rating
 ```
 
 ## 12. Student: Transcript and Teacher Info
@@ -799,8 +1081,8 @@ Logout teacher.
 Login:
 
 ```text
-student@uni.kz
-student
+nurs@uni.kz
+nurs
 ```
 
 Открыть:
@@ -819,8 +1101,8 @@ student
 
 ```text
 Transcript for Nursultan Student
-ENR-... Object-Oriented Programming APPROVED Mark...
-GPA: ...
+ENR-... Object-Oriented Programming APPROVED A1=30.0, A2=30.0, Final=40.0, Grade=100.0, Letter=A
+GPA: 4.00
 ```
 
 ### 12.2 View Teacher Info
@@ -844,6 +1126,43 @@ Student.getTranscript()
 Student.viewTeacherInfo()
 Course lessons
 LessonType LECTURE/PRACTICE
+```
+
+### 12.3 Rate Teacher
+
+```text
+7
+OFF-CS101-2
+1
+Teacher rating: 5
+```
+
+Where:
+
+```text
+1 - LECTURE
+2 - PRACTICE
+```
+
+Expected:
+
+```text
+Teacher rated: Prof Assylzhan (5)
+```
+
+Important:
+
+```text
+Teacher rating is now a separate student action.
+Put mark no longer auto-creates rating 5.
+```
+
+Проверяет:
+
+```text
+Student.rateTeacher()
+Teacher.addRating()
+Manual rating flow
 ```
 
 ## 13. Manager: Academic Report
@@ -916,8 +1235,15 @@ Manager app:
 Ввести:
 
 ```text
+Teacher id: T1
+Student id: S1
 Official request description: Book room 301 for final exam
 Complaint text: Student was absent many times
+Urgency:
+1 - LOW
+2 - MEDIUM
+3 - HIGH
+2
 ```
 
 Ожидаемый результат:
@@ -934,7 +1260,122 @@ Employee.createOfficialRequest()
 OfficialRequest.sign()
 Teacher.sendComplaint()
 Complaint
-Urgency.MEDIUM
+selected urgency (LOW / MEDIUM / HIGH)
+```
+
+### 15.1 Student Organization Requests
+
+Manager app:
+
+```text
+8 - Show organization requests
+```
+
+Expected:
+
+```text
+ORGREQ-... - Nursultan Student, ORG-AI, AI Club, status: pending, ...
+```
+
+Approve:
+
+```text
+9 - Approve organization request
+Organization request id: ORGREQ-...
+```
+
+Expected:
+
+```text
+Organization request approved: ORGREQ-... status: approved
+```
+
+Now login as `nurs@uni.kz / nurs` and check:
+
+```text
+2 - Education app
+8 - Show student organizations
+```
+
+Expected:
+
+```text
+ORG-AI - AI Club, members=1, head=Nursultan Student, Student club for AI demos and hackathons
+```
+
+Notification check:
+
+```text
+6 - News app
+8 - Show my notifications
+```
+
+Expected:
+
+```text
+Notifications:
+- Organization request approved: AI Club (ORG-AI)
+```
+
+Negative branch:
+
+```text
+Create another request and use 10 - Reject organization request.
+```
+
+Expected:
+
+```text
+Organization request rejected: ORGREQ-... status: rejected
+```
+
+### 15.2 Employee Messages
+
+Any employee can open:
+
+```text
+9 - Messages
+```
+
+Test as manager:
+
+```text
+1 - Send message
+Employee id: T1
+Message text: Please confirm the exam room.
+```
+
+Expected:
+
+```text
+Sent message: ...
+```
+
+Then login as teacher and open:
+
+```text
+9 - Messages
+2 - Show my messages
+```
+
+Expected:
+
+```text
+... Dana Dean ... Please confirm the exam room.
+```
+
+Notification check as teacher:
+
+```text
+6 - News app
+8 - Show my notifications
+```
+
+Expected:
+
+```text
+Notifications:
+- New message from Dana Dean: Please confirm the exam room.
 ```
 
 ## 16. Research: Journal, Paper, H-index, Sorting
@@ -968,10 +1409,28 @@ Research menu:
 5 - Assign supervisor
 6 - Join research project
 7 - Show news and notifications
+8 - Generate top cited researcher news
+9 - Add diploma project
+10 - Show diploma projects
 0 - Back
 ```
 
 ### 16.1 Create Journal
+
+Negative test:
+
+```text
+1
+Journal id:
+```
+
+Expected:
+
+```text
+This field is required.
+```
+
+Now create a valid journal:
 
 ```text
 1
@@ -983,6 +1442,12 @@ Journal title: University Research Journal
 
 ```text
 Created journal: ...
+```
+
+If you try the same `Journal id` again:
+
+```text
+Journal with this id already exists.
 ```
 
 Проверяет:
@@ -998,6 +1463,7 @@ Observer pattern
 
 ```text
 2
+Journal id: J-UR
 Paper id: P1
 Paper title: LMS Logs and Student Performance
 Citations: 10
@@ -1065,7 +1531,78 @@ SortByPagesStrategy
 Strategy pattern
 ```
 
-### 16.5 Join Research Project
+### 16.5 Assign Supervisor
+
+This action now asks for exact ids. It should not silently select the first graduate student or first researcher.
+
+Important setup:
+
+```text
+T1 should have a ResearcherProfile.
+In the current console flow, the easiest way to get that is Teacher position 4 - PROFESSOR.
+If T1 was created earlier as LECTOR, you can promote T1 to professor first.
+For successful assignment, T1 must also have h-index >= 3.
+```
+
+To make T1 h-index >= 3, login as `prof@uni.kz / prof`, open Research app, and publish 3 papers with at least 3 citations each:
+
+```text
+4 - Research app
+2 - Publish paper
+Journal id: J-UR
+Paper id: PT1
+Paper title: Supervisor Paper 1
+Citations: 3
+Pages: 5
+Doi: 10.1000/t1
+
+2 - Publish paper
+Journal id: J-UR
+Paper id: PT2
+Paper title: Supervisor Paper 2
+Citations: 3
+Pages: 5
+Doi: 10.1000/t2
+
+2 - Publish paper
+Journal id: J-UR
+Paper id: PT3
+Paper title: Supervisor Paper 3
+Citations: 3
+Pages: 5
+Doi: 10.1000/t3
+```
+
+Then login as graduate student again:
+
+```text
+5
+Student id: G1
+Researcher user id: T1
+```
+
+Expected if selected researcher h-index is lower than 3:
+
+```text
+Low h-index...
+```
+
+Expected if selected researcher has h-index >= 3:
+
+```text
+Supervisor assigned: ...
+```
+
+Проверяет:
+
+```text
+ResearchService.assignSupervisor()
+GraduateStudent.assignSupervisor()
+LowHIndexException
+Self-supervisor protection
+```
+
+### 16.6 Join Research Project
 
 ```text
 6
@@ -1088,7 +1625,7 @@ NotResearcherException protection
 DuplicateParticipantException protection
 ```
 
-### 16.6 Show News and Notifications
+### 16.7 Show News and Notifications
 
 ```text
 7
@@ -1110,6 +1647,68 @@ Pinned research news priority
 Observer notifications
 ```
 
+### 16.8 Generate Top Cited Researcher News
+
+```text
+8
+School: SITE
+Year: 2026
+```
+
+Expected:
+
+```text
+Generated news: [PINNED] Top cited researcher 2026 ...
+```
+
+Проверяет:
+
+```text
+NewsService.generateTopCitedResearcherNews()
+ResearchService.getTopCitedResearcher()
+Pinned research news generation
+```
+
+### 16.9 Diploma Projects
+
+Graduate student only:
+
+```text
+9
+Paper id: DP1
+Paper title: AI Tutor for OOP
+Citations: 0
+Pages: 40
+Year: 2026
+Doi: 10.1000/dp1
+```
+
+Expected:
+
+```text
+Diploma project saved: ...
+```
+
+Now show saved diploma projects:
+
+```text
+10
+```
+
+Expected:
+
+```text
+DP1 ...
+```
+
+Проверяет:
+
+```text
+GraduateStudent.addDiplomaProject()
+GraduateStudent.getDiplomaProjects()
+ResearchPaper as diploma project
+```
+
 ## 17. Support Request Flow
 
 ### 17.1 Create Request As Student
@@ -1117,8 +1716,8 @@ Observer notifications
 Login:
 
 ```text
-student@uni.kz
-student
+nurs@uni.kz
+nurs
 ```
 
 Открыть:
@@ -1167,17 +1766,18 @@ Tech support menu:
 
 ```text
 1 - Create support request
-2 - Assign first request to specialist
-3 - Accept first request
-4 - Mark first request done
-5 - Show support requests
+2 - Assign request to me
+3 - Accept request
+4 - Reject request
+5 - Mark request done
+6 - Show support requests
 0 - Back
 ```
 
 Проверка:
 
 ```text
-5
+6
 ```
 
 Ожидаемый результат:
@@ -1190,6 +1790,7 @@ Assign:
 
 ```text
 2
+Request id: SUP-...
 ```
 
 Ожидаемый результат:
@@ -1202,6 +1803,7 @@ Accept:
 
 ```text
 3
+Request id: SUP-...
 ```
 
 Ожидаемый результат:
@@ -1213,7 +1815,8 @@ status: accepted
 Done:
 
 ```text
-4
+5
+Request id: SUP-...
 ```
 
 Ожидаемый результат:
@@ -1233,7 +1836,45 @@ SupportRequest.done()
 RequestStatus lifecycle
 ```
 
-## 18. Admin: Logs
+Negative test:
+
+```text
+Create two support requests.
+Login as tech support.
+Use 6 - Show support requests.
+Choose 2 / 3 / 5 and enter the exact SUP-... id you want.
+```
+
+Expected:
+
+```text
+Only selected request changes status.
+Other requests stay unchanged.
+```
+
+### 17.3 Support Notifications
+
+After assign / accept / reject / done, login back as `nurs@uni.kz / nurs` and open:
+
+```text
+6 - News app
+8 - Show my notifications
+```
+
+Expected examples:
+
+```text
+Support request assigned: SUP-... -> Aliya Support
+Support request accepted: SUP-...
+Support request completed: SUP-...
+```
+
+Проверяет:
+
+```text
+SupportRequest notifications to creator
+User.addNotification()
+```
 
 ## 18. News App: View Details and Comments
 
@@ -1262,8 +1903,8 @@ Research publication автоматически создает pinned research n
 Login любым пользователем, например student:
 
 ```text
-student@uni.kz
-student
+nurs@uni.kz
+nurs
 ```
 
 Открыть:
@@ -1313,9 +1954,18 @@ NewsItem.getComments()
 
 ### 18.3 Add Comment
 
+Important:
+
 ```text
-3 - Add comment
+Add comment works only after opening news details first.
+If you choose 3 before choosing 2, expected result is:
+Open news details first.
+```
+
+```text
+2 - Show news details
 News number: 1
+3 - Add comment
 Comment text: Good luck everyone!
 ```
 
@@ -1347,6 +1997,118 @@ News.addComment()
 Comment
 Current logged-in user as comment author
 ```
+
+### 18.4 Journal Subscribe / Unsubscribe
+
+Open News app:
+
+```text
+6 - News app
+```
+
+Show journals:
+
+```text
+4 - Show journals
+```
+
+Expected:
+
+```text
+J-UR - University Research Journal papers=...
+```
+
+Subscribe:
+
+```text
+5 - Subscribe to journal
+Journal id: J-UR
+```
+
+Expected:
+
+```text
+Subscribed to journal: University Research Journal
+```
+
+Unsubscribe:
+
+```text
+6 - Unsubscribe from journal
+Journal id: J-UR
+```
+
+Expected:
+
+```text
+Unsubscribed from journal: University Research Journal
+```
+
+Show journal papers:
+
+```text
+7 - Show journal papers
+Journal id: J-UR
+```
+
+Show notifications:
+
+```text
+8 - Show my notifications
+```
+
+Important:
+
+```text
+Notifications are stored inside current User.
+Subscribe itself does not create a notification.
+Notification appears after a new paper is published in a journal you are subscribed to.
+```
+
+Full notification test:
+
+```text
+1. Login as student.
+2. News app -> 5 - Subscribe to journal -> J-UR.
+3. Logout.
+4. Login as professor/researcher.
+5. Research app -> 2 - Publish paper -> Journal id: J-UR.
+6. Logout.
+7. Login as the same student.
+8. News app -> 8 - Show my notifications.
+```
+
+Expected:
+
+```text
+Notifications:
+- New paper in University Research Journal: ...
+```
+
+Проверяет:
+
+```text
+JournalService.subscribe()
+JournalService.unsubscribe()
+Journal.getPapers()
+User.update()
+User.getNotifications()
+Observer subscription list
+```
+
+### 18.5 Other Notification Sources
+
+`News app -> 8 - Show my notifications` is also the place to verify:
+
+```text
+Registration approved / rejected
+Support request assigned / accepted / rejected / completed
+Organization request submitted / approved / rejected
+New employee message
+Official request signed / rejected
+```
+
+This is the fastest smoke test to confirm cross-service notifications are working.
 
 ## 19. Admin: Logs
 
@@ -1471,8 +2233,8 @@ Wrong email or password.
 Login as Student:
 
 ```text
-student@uni.kz
-student
+nurs@uni.kz
+nurs
 ```
 
 В launcher введи:
@@ -1540,24 +2302,32 @@ Use this table to mark what you tested.
 | Service / Class | How to test | Done |
 | --- | --- | --- |
 | `AuthService` | Login success and wrong login | [ ] |
-| `Session` | Login creates current user session | [ ] |
+| `Session` | Login creates current user session and logout clears it | [ ] |
+| `User.changePassword` | Launcher password change and relogin with new password | [ ] |
 | `UserManagementService` | Admin add/remove users | [ ] |
 | `DefaultUserFactory` | Create all roles | [ ] |
 | `CourseRegistrationService.register` | Student registers for offering | [ ] |
 | `CourseRegistrationService.approve` | Manager approves enrollment | [ ] |
 | `CourseRegistrationService.reject` | Manager rejects enrollment | [ ] |
+| `StudentOrganizationRequest` | Student creates request, manager approves/rejects | [ ] |
+| `CommunicationApp` / `Message` | Employee sends and reads messages | [ ] |
 | `ReportService` | Manager creates academic report | [ ] |
 | `NewsService.addGeneralNews` | Manager creates news | [ ] |
+| `NewsService.generateTopCitedResearcherNews` | Research app generates top cited news manually | [ ] |
 | `NewsItem.addComment` | News app adds comment | [ ] |
 | `JournalService.publishPaper` | Researcher publishes paper | [ ] |
+| `JournalService.subscribe` | News app subscribes user to journal | [ ] |
+| `JournalService.unsubscribe` | News app unsubscribes user from journal | [ ] |
 | `ResearchService.printAllResearchPapers` | Research sorted papers | [ ] |
+| `ResearchService.assignSupervisor` | Research app assigns supervisor by ids | [ ] |
 | `ResearchService.joinProject` | Researcher joins project | [ ] |
+| `GraduateStudent.addDiplomaProject` | Graduate student adds and shows diploma project | [ ] |
 | `SupportDeskService.createRequest` | User creates support request | [ ] |
-| `SupportDeskService.assignToSpecialist` | Tech support assigns request | [ ] |
+| `SupportDeskService.assignToSpecialist` | Tech support assigns selected request by id | [ ] |
 | `LogService` | Admin shows logs | [ ] |
 | `FileUniversityDataStore.save` | Admin saves data | [ ] |
 | `FileUniversityDataStore.load` | Restart and data loads | [ ] |
-| `I18n` | Run in EN/RU/KZ | [ ] |
+| `I18n` | Run in EN/RU/KZ and change language inside session | [ ] |
 | `Strategy` patterns | Sort students/teachers/papers | [ ] |
 | `Observer` pattern | Publish paper creates notification/news | [ ] |
 | `Decorator` pattern | Research news appears pinned/high priority | [ ] |
@@ -1571,34 +2341,38 @@ If you want one compact full path:
 ```text
 1. Start project.
 2. Login admin.
-3. Create M1, T1, S1, G1, TS1.
-4. Save.
-5. Login manager.
-6. Add CS101 course offering.
-7. Assign T1 as lecture and practice teacher.
-8. Login student.
-9. Register S1 to OFF-CS101-2.
-10. Login manager.
-11. Approve registration.
-12. Login teacher.
-13. Put mark.
-14. Login student.
-15. Show transcript and teacher info.
-16. Login manager.
-17. Create report, news, official request/complaint.
-18. Login graduate student.
-19. Create journal, publish paper, show h-index, sort papers, join project.
-20. Login student.
-21. Create support request.
-22. Login tech support.
-23. Assign, accept, done support request.
-24. Login any user.
-25. Open News app, show news details, add comment.
-26. Login admin.
-27. Show logs.
-28. Save.
-29. Restart.
-30. Confirm data loaded and all users/data still exist.
+3. Use 7 - Change language once, then switch back if needed.
+4. Use 8 - Change password once and verify relogin, then either keep the new password in mind or change it back.
+5. Create M1, T1, S1, G1, TS1.
+6. Save.
+7. Login manager.
+8. Add CS101 course offering.
+9. Assign T1 as lecture and practice teacher.
+10. Login student.
+11. Register S1 to OFF-CS101-2.
+12. Join one default student organization and create one new organization request.
+13. Login manager.
+14. Approve registration and approve the organization request.
+15. Login teacher.
+16. Put mark with A1=30, A2=30, Final=40.
+17. Login student.
+18. Show transcript, teacher info, and rate teacher.
+19. Login manager.
+20. Create report, news, official request/complaint, then send one employee message to T1.
+21. Login graduate student.
+22. Create journal, publish paper, show h-index, sort papers, join project, generate top cited researcher news, add diploma project.
+23. Login student.
+24. Create support request and check notifications.
+25. Login tech support.
+26. Show requests, choose exact SUP-... id, assign, accept, done support request.
+27. Login any user.
+28. Open News app, show news details, add comment.
+29. In News app, show journals, subscribe, unsubscribe, show journal papers, show notifications.
+30. Login admin.
+31. Show logs.
+32. Save.
+33. Restart.
+34. Confirm data loaded and all users/data still exist.
 ```
 
 ## 24. Known Console UI Notes
@@ -1609,16 +2383,54 @@ Example:
 
 ```text
 Student Education menu:
-  1, 2, 5, 6, 0
+  1, 2, 5, 6, 7, 8, 9, 10, 11, 0
 
 Manager Education menu:
-  1, 3, 7, 0
+  1, 3, 8, 0
 
 Teacher Education menu:
   1, 4, 0
 ```
 
 This is not a data bug. It is just how the current console menu is implemented.
+
+Launcher common menu:
+
+```text
+5 - Support app
+6 - News app
+7 - Change language
+8 - Change password
+0 - Logout
+```
+
+Employee-only launcher action:
+
+```text
+9 - Messages
+```
+
+Support app now works by exact request id:
+
+```text
+2 - Assign request to me
+3 - Accept request
+4 - Reject request
+5 - Mark request done
+6 - Show support requests
+```
+
+Research supervisor note:
+
+```text
+If Assign supervisor prints:
+No researcher found. Add a graduate student or professor first.
+
+Most likely T1 was created as LECTOR in old saved data.
+Fix: Admin app -> 7 - Promote teacher to professor -> Teacher id: T1.
+Alternative: create a new teacher like T2 with Teacher position 4 - PROFESSOR, or delete/rename data/university.ser and retest from clean data.
+Also remember: supervisor h-index must be >= 3, otherwise LowHIndexException is expected.
+```
 
 ## 25. What To Do If Data Looks Missing
 

@@ -206,6 +206,7 @@ interface UserFactory {
 }
 
 class DefaultUserFactory
+DefaultUserFactory : +createTeacher(id: String, name: String, email: String, passwordHash: String, position: TeacherPosition): Teacher
 UserFactory <|.. DefaultUserFactory
 
 ' ===================== DECORATOR =====================
@@ -352,6 +353,7 @@ class Student extends User {
   +getTranscript(): String
   +rateTeacher(t: Teacher, rating: int): void
   +recordFail(): void throws TooManyFailsException
+  +removeFail(): void
 }
 
 class GraduateStudent extends Student {
@@ -365,6 +367,7 @@ class Teacher extends Employee {
   -position: TeacherPosition
   -courses: List~Course~
   +viewCourses(): List~Course~
+  +promoteToProfessor(): void
   +putMark(enrollment: Enrollment, mark: Mark): void
   +sendComplaint(dean: Manager, students: List~Student~, urgency: Urgency, text: String): Complaint
   +viewStudents(course: Course): List~Student~
@@ -448,6 +451,7 @@ class Mark {
   -attestation2: double
   -finalExam: double
   +getFinalGrade(): double
+  +getLetterGrade(): String
   +toString(): String
 }
 

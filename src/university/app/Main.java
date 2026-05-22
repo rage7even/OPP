@@ -1,4 +1,4 @@
-﻿package university.app;
+package university.app;
 
 import java.io.File;
 import java.io.PrintStream;
@@ -7,6 +7,7 @@ import java.util.Scanner;
 
 import university.core.University;
 import university.employees.Admin;
+import university.employees.Employee;
 import university.employees.Manager;
 import university.employees.Teacher;
 import university.enums.Language;
@@ -16,6 +17,7 @@ import university.exceptions.UniversityException;
 import university.patterns.DefaultUserFactory;
 import university.services.Session;
 import university.users.Student;
+import university.users.StudentOrganization;
 import university.users.User;
 
 public final class Main {
@@ -33,6 +35,7 @@ public final class Main {
         System.out.println(I18n.f("selected.language", I18n.languageName(language)));
         System.out.println();
         ensureBootstrapAdmin();
+        ensureDefaultStudentOrganizations();
 
         while (true) {
             Session session = login(scanner);
@@ -44,7 +47,7 @@ public final class Main {
     }
 
     private static void runLauncher(Scanner scanner, Session session) {
-        User user = session.getUser();
+        User user = session.getCurrentUser();
         while (true) {
             printLauncher(user);
             int choice = ConsoleInput.readInt(scanner, I18n.t("choose.app"));
@@ -84,6 +87,19 @@ public final class Main {
                 case 6:
                     NewsApp.run(scanner, user);
                     break;
+                case 7:
+                    changeLanguage(scanner, user);
+                    break;
+                case 8:
+                    changePassword(scanner, user);
+                    break;
+                case 9:
+                    if (user instanceof Employee) {
+                        CommunicationApp.run(scanner, (Employee) user);
+                    } else {
+                        System.out.println(I18n.t("access.denied"));
+                    }
+                    break;
                 case 0:
                     University.getInstance().getAuthService().logout(session);
                     System.out.println(I18n.t("logged.out"));
@@ -114,6 +130,11 @@ public final class Main {
         }
         System.out.println(I18n.t("launcher.support"));
         System.out.println(I18n.t("launcher.news"));
+        System.out.println(I18n.t("launcher.change.language"));
+        System.out.println(I18n.t("launcher.change.password"));
+        if (user instanceof Employee) {
+            System.out.println(I18n.t("launcher.messages"));
+        }
         System.out.println(I18n.t("launcher.logout"));
     }
 
@@ -129,7 +150,7 @@ public final class Main {
         String password = ConsoleInput.readLine(scanner, I18n.t("password"));
         try {
             Session session = University.getInstance().getAuthService().login(email, password);
-            AppLanguage.apply(AppLanguage.selected());
+            AppLanguage.use(session.getUser());
             System.out.println(I18n.f("logged.in", session.getUser().getName()));
             return session;
         } catch (UnauthorizedActionException e) {
@@ -148,6 +169,20 @@ public final class Main {
         System.out.println(I18n.t("bootstrap.admin.created"));
     }
 
+    private static void ensureDefaultStudentOrganizations() {
+        if (!University.getInstance().getStudentOrganizations().isEmpty()) {
+            return;
+        }
+        University.getInstance().addStudentOrganization(new StudentOrganization(
+                "ORG-DEV",
+                "Developers Club",
+                "Student community for programming and software projects."));
+        University.getInstance().addStudentOrganization(new StudentOrganization(
+                "ORG-DEBATE",
+                "Debate League",
+                "Public speaking, debate practice, and student events."));
+    }
+
     private static void loadSavedDataIfPresent() {
         File dataFile = new File("data/university.ser");
         if (!dataFile.exists() || dataFile.length() == 0) {
@@ -162,8 +197,6 @@ public final class Main {
     }
 
     /*
-     * Sample data for manual input. These are comments only; the program starts empty.
-     *
      * Users:
      * 1) Admin: id=A1, name=Aigerim Admin, email=admin@uni.kz, password=admin
      * 2) Manager: id=M1, name=Dana Dean, email=dean@uni.kz, password=dean
@@ -185,16 +218,53 @@ public final class Main {
         System.out.println("1 - Қазақша");
         System.out.println("2 - English (default)");
         System.out.println("3 - Русский");
-        System.out.print(I18n.t("choose.language.prompt") + " ");
+        while (true) {
+            System.out.print(I18n.t("choose.language.prompt") + " ");
+            String input = scanner.nextLine().trim();
+            if (input.isEmpty()) {
+                return Language.EN;
+            }
+            try {
+                switch (Integer.parseInt(input)) {
+                    case 1:
+                        return Language.KZ;
+                    case 2:
+                        return Language.EN;
+                    case 3:
+                        return Language.RU;
+                    default:
+                        System.out.println(I18n.t("unknown.choice"));
+                        break;
+                }
+            } catch (NumberFormatException e) {
+                System.out.println(I18n.t("enter.number"));
+            }
+        }
+    }
 
-        String input = scanner.nextLine().trim();
-        if ("1".equals(input)) {
-            return Language.KZ;
+    private static void changeLanguage(Scanner scanner, User user) {
+        Language language = chooseLanguage(scanner);
+        AppLanguage.changeFor(user, language);
+        System.out.println(I18n.f("selected.language", I18n.languageName(language)));
+    }
+
+    private static void changePassword(Scanner scanner, User user) {
+        String currentPassword = ConsoleInput.readLine(scanner, I18n.t("password.current"));
+        String newPassword = ConsoleInput.readLine(scanner, I18n.t("password.new"));
+        String confirmPassword = ConsoleInput.readLine(scanner, I18n.t("password.confirm"));
+        if (!newPassword.equals(confirmPassword)) {
+            System.out.println(I18n.t("password.mismatch"));
+            return;
         }
-        if ("3".equals(input)) {
-            return Language.RU;
+        try {
+            user.changePassword(currentPassword, newPassword);
+            University.getInstance().getLogService().log(user, "Changed password");
+            System.out.println(I18n.t("password.changed"));
+        } catch (UnauthorizedActionException e) {
+            System.out.println(I18n.t("password.incorrect"));
+        } catch (IllegalArgumentException e) {
+            System.out.println(I18n.t("required.field"));
         }
-        return Language.EN;
     }
 
     private static void configureUtf8Output() {
@@ -206,4 +276,3 @@ public final class Main {
         }
     }
 }
-

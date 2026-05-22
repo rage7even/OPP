@@ -8,6 +8,7 @@ import java.util.Objects;
 
 import university.enums.Language;
 import university.exceptions.AlreadyResearcherException;
+import university.exceptions.UnauthorizedActionException;
 import university.patterns.Observer;
 import university.research.Journal;
 import university.research.ResearchPaper;
@@ -47,7 +48,14 @@ public abstract class User implements Observer, Serializable {
 
     @Override
     public void update(ResearchPaper paper) {
-        notifications.add("New paper in " + paper.getJournalTitle() + ": " + paper.getTitle());
+        addNotification("New paper in " + paper.getJournalTitle() + ": " + paper.getTitle());
+    }
+
+    public void addNotification(String notification) {
+        if (notification == null || notification.trim().isEmpty()) {
+            return;
+        }
+        notificationList().add(notification);
     }
 
     public ResearcherProfile becomeResearcher(String school) {
@@ -90,12 +98,33 @@ public abstract class User implements Observer, Serializable {
         return passwordHash;
     }
 
+    public boolean passwordMatches(String password) {
+        return passwordHash != null && passwordHash.equals(password);
+    }
+
+    public void changePassword(String currentPassword, String newPassword) {
+        if (!passwordMatches(currentPassword)) {
+            throw new UnauthorizedActionException("incorrect current password for " + id);
+        }
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            throw new IllegalArgumentException("new password is required");
+        }
+        passwordHash = newPassword;
+    }
+
     public Language getLanguage() {
         return language;
     }
 
     public List<String> getNotifications() {
-        return Collections.unmodifiableList(notifications);
+        return Collections.unmodifiableList(notificationList());
+    }
+
+    private List<String> notificationList() {
+        if (notifications == null) {
+            notifications = new ArrayList<String>();
+        }
+        return notifications;
     }
 
     @Override

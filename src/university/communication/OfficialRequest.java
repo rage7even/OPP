@@ -26,11 +26,13 @@ public class OfficialRequest implements Serializable {
     public void sign(Manager manager) {
         this.signedBy = manager;
         this.rejected = false;
+        createdBy.addNotification("Official request signed: " + requestId + " by " + manager.getName());
     }
 
     public void reject() {
         this.signedBy = null;
         this.rejected = true;
+        createdBy.addNotification("Official request rejected: " + requestId);
     }
 
     public String getRequestId() {

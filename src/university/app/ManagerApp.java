@@ -1,4 +1,4 @@
-﻿package university.app;
+package university.app;
 
 import java.util.Arrays;
 import java.util.Scanner;
@@ -17,6 +17,8 @@ import university.patterns.SortStudentByGpaStrategy;
 import university.patterns.SortStudentByNameStrategy;
 import university.patterns.SortTeacherByNameStrategy;
 import university.patterns.SortTeacherByRatingStrategy;
+import university.users.StudentOrganization;
+import university.users.StudentOrganizationRequest;
 
 public final class ManagerApp {
     private ManagerApp() {
@@ -32,6 +34,9 @@ public final class ManagerApp {
             System.out.println(I18n.t("manager.report"));
             System.out.println(I18n.t("manager.news"));
             System.out.println(I18n.t("manager.official"));
+            System.out.println(I18n.t("manager.organization.requests"));
+            System.out.println(I18n.t("manager.organization.approve"));
+            System.out.println(I18n.t("manager.organization.reject"));
             System.out.println(I18n.t("back"));
 
             int choice = ConsoleInput.readInt(scanner, I18n.t("choose"));
@@ -56,6 +61,15 @@ public final class ManagerApp {
                     break;
                 case 7:
                     officialRequest(scanner, manager);
+                    break;
+                case 8:
+                    showOrganizationRequests();
+                    break;
+                case 9:
+                    approveOrganizationRequest(scanner, manager);
+                    break;
+                case 10:
+                    rejectOrganizationRequest(scanner, manager);
                     break;
                 case 0:
                     return;
@@ -102,22 +116,25 @@ public final class ManagerApp {
             return;
         }
         System.out.println("1 - LECTURE, 2 - PRACTICE");
-        LessonType lessonType = ConsoleInput.readInt(scanner, I18n.t("choose")) == 1
+        LessonType lessonType = ConsoleInput.readIntInRange(scanner, I18n.t("choose"), 1, 2) == 1
                 ? LessonType.LECTURE
                 : LessonType.PRACTICE;
         manager.assignCourseToTeacher(course, lessonType, teacher);
-        System.out.println(I18n.f("assigned.practice.teacher", teacher));
+        System.out.println(I18n.f("assigned", teacher));
     }
 
     private static CourseType readCourseType(Scanner scanner) {
-        int type = ConsoleInput.readInt(scanner, I18n.t("choose"));
-        if (type == 1) {
-            return CourseType.MAJOR;
+        int type = ConsoleInput.readIntInRange(scanner, I18n.t("choose"), 1, 3);
+        switch (type) {
+            case 1:
+                return CourseType.MAJOR;
+            case 2:
+                return CourseType.MINOR;
+            case 3:
+                return CourseType.FREE_ELECTIVE;
+            default:
+                throw new IllegalArgumentException("Invalid course type: " + type);
         }
-        if (type == 2) {
-            return CourseType.MINOR;
-        }
-        return CourseType.FREE_ELECTIVE;
     }
 
     private static Course findCourse(String courseId) {
@@ -170,8 +187,8 @@ public final class ManagerApp {
     }
 
     private static void officialRequest(Scanner scanner, Manager manager) {
-        Teacher teacher = AppData.firstTeacher();
-        university.users.Student student = AppData.firstStudent();
+        Teacher teacher = selectTeacher(scanner, manager);
+        university.users.Student student = selectStudent(scanner);
         if (teacher == null) {
             System.out.println(I18n.t("no.teacher"));
             return;
@@ -185,10 +202,125 @@ public final class ManagerApp {
         OfficialRequest request = teacher.createOfficialRequest(officialDescription);
         manager.receiveOfficialRequest(request);
         request.sign(manager);
-        Complaint complaint = teacher.sendComplaint(manager, Arrays.asList(student),
-                Urgency.MEDIUM, complaintText);
+        Complaint complaint = teacher.sendComplaint(manager, Arrays.asList(student), readUrgency(scanner), complaintText);
         System.out.println(request);
         System.out.println(complaint);
     }
-}
 
+    private static void showOrganizationRequests() {
+        if (University.getInstance().getStudentOrganizationRequests().isEmpty()) {
+            System.out.println(I18n.t("no.organization.requests"));
+            return;
+        }
+        for (StudentOrganizationRequest request : University.getInstance().getStudentOrganizationRequests()) {
+            System.out.println(AppFormatter.studentOrganizationRequest(request));
+        }
+    }
+
+    private static void approveOrganizationRequest(Scanner scanner, Manager manager) {
+        StudentOrganizationRequest request = selectPendingOrganizationRequest(scanner);
+        if (request == null) {
+            return;
+        }
+        if (organizationExists(request.getOrganizationId(), request.getOrganizationName())) {
+            System.out.println(I18n.t("duplicate.organization"));
+            return;
+        }
+        StudentOrganization organization = new StudentOrganization(
+                request.getOrganizationId(),
+                request.getOrganizationName(),
+                request.getDescription());
+        organization.assignHead(request.getStudent());
+        University.getInstance().addStudentOrganization(organization);
+        request.approve();
+        University.getInstance().getLogService().log(manager, "Approved organization request " + request.getRequestId());
+        System.out.println(I18n.f("approved.organization.request", AppFormatter.studentOrganizationRequest(request)));
+    }
+
+    private static void rejectOrganizationRequest(Scanner scanner, Manager manager) {
+        StudentOrganizationRequest request = selectPendingOrganizationRequest(scanner);
+        if (request == null) {
+            return;
+        }
+        request.reject();
+        University.getInstance().getLogService().log(manager, "Rejected organization request " + request.getRequestId());
+        System.out.println(I18n.f("rejected.organization.request", AppFormatter.studentOrganizationRequest(request)));
+    }
+
+    private static Urgency readUrgency(Scanner scanner) {
+        System.out.println("1 - LOW, 2 - MEDIUM, 3 - HIGH");
+        int urgencyNumber = ConsoleInput.readIntInRange(scanner, I18n.t("choose"), 1, 3);
+        switch (urgencyNumber) {
+            case 1:
+                return Urgency.LOW;
+            case 2:
+                return Urgency.MEDIUM;
+            case 3:
+                return Urgency.HIGH;
+            default:
+                throw new IllegalArgumentException("Invalid urgency: " + urgencyNumber);
+        }
+    }
+
+    private static Teacher selectTeacher(Scanner scanner, Manager manager) {
+        java.util.List<Teacher> teachers = manager.viewTeachers(new SortTeacherByNameStrategy());
+        if (teachers.isEmpty()) {
+            return null;
+        }
+        for (Teacher teacher : teachers) {
+            System.out.println(teacher.getId() + " - " + teacher.getName());
+        }
+        return findTeacher(ConsoleInput.readLine(scanner, I18n.t("teacher.id")));
+    }
+
+    private static university.users.Student selectStudent(Scanner scanner) {
+        java.util.List<university.users.Student> students = AppData.students();
+        if (students.isEmpty()) {
+            return null;
+        }
+        for (university.users.Student student : students) {
+            System.out.println(student.getId() + " - " + student.getName());
+        }
+        String studentId = ConsoleInput.readLine(scanner, I18n.t("student.id"));
+        for (university.users.Student student : students) {
+            if (student.getId().equals(studentId)) {
+                return student;
+            }
+        }
+        return null;
+    }
+
+    private static StudentOrganizationRequest selectPendingOrganizationRequest(Scanner scanner) {
+        java.util.List<StudentOrganizationRequest> pending = new java.util.ArrayList<StudentOrganizationRequest>();
+        for (StudentOrganizationRequest request : University.getInstance().getStudentOrganizationRequests()) {
+            if (request.getStatus() == university.enums.RegistrationStatus.PENDING) {
+                pending.add(request);
+            }
+        }
+        if (pending.isEmpty()) {
+            System.out.println(I18n.t("no.pending.organization.requests"));
+            return null;
+        }
+        for (StudentOrganizationRequest request : pending) {
+            System.out.println(AppFormatter.studentOrganizationRequest(request));
+        }
+        String requestId = ConsoleInput.readLine(scanner, I18n.t("organization.request.id"));
+        for (StudentOrganizationRequest request : pending) {
+            if (request.getRequestId().equals(requestId)) {
+                return request;
+            }
+        }
+        System.out.println(I18n.t("no.organization.request"));
+        return null;
+    }
+
+    private static boolean organizationExists(String organizationId, String organizationName) {
+        for (StudentOrganization organization : University.getInstance().getStudentOrganizations()) {
+            if (organization.getOrgId().equalsIgnoreCase(organizationId)
+                    || organization.getName().equalsIgnoreCase(organizationName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+}

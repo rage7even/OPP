@@ -85,6 +85,12 @@ public class Student extends User {
         }
     }
 
+    public void removeFail() {
+        if (failCount > 0) {
+            failCount--;
+        }
+    }
+
     public void addEnrollment(Enrollment enrollment) {
         if (!enrollments.contains(enrollment)) {
             enrollments.add(enrollment);

@@ -26,7 +26,23 @@ public class Session implements Serializable {
         return user;
     }
 
+    public User getCurrentUser() {
+        return user;
+    }
+
+    public void setCurrentUser(User user) {
+        this.user = user;
+    }
+
     public Date getIssuedAt() {
         return new Date(issuedAt.getTime());
+    }
+
+    public boolean isAuthenticated() {
+        return user != null;
+    }
+
+    public void clear() {
+        user = null;
     }
 }

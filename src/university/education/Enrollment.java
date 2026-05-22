@@ -34,9 +34,13 @@ public class Enrollment implements Serializable {
     }
 
     public void setMark(Mark mark) {
+        boolean wasFailing = this.mark != null && this.mark.getFinalGrade() < 50;
+        boolean isFailing = mark.getFinalGrade() < 50;
         this.mark = mark;
-        if (mark.getFinalGrade() < 50) {
+        if (isFailing && !wasFailing) {
             student.recordFail();
+        } else if (!isFailing && wasFailing) {
+            student.removeFail();
         }
         student.recalculateGpa();
     }

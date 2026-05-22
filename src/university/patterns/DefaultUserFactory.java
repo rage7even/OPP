@@ -21,11 +21,11 @@ public class DefaultUserFactory implements UserFactory {
             case STUDENT:
                 return new Student(id, name, email, passwordHash, id);
             case GRADUATE_STUDENT:
-                return new GraduateStudent(id, name, email, passwordHash, id, DegreeType.MASTER);
+                return createGraduateStudent(id, name, email, passwordHash, DegreeType.MASTER);
             case TEACHER:
                 return new Teacher(id, name, email, passwordHash, "EMP-" + id, 450000, TeacherPosition.LECTOR);
             case MANAGER:
-                return new Manager(id, name, email, passwordHash, "EMP-" + id, 600000, ManagerType.DEPARTMENT);
+                return createManager(id, name, email, passwordHash, ManagerType.DEPARTMENT);
             case ADMIN:
                 return new Admin(id, name, email, passwordHash, "EMP-" + id, 550000);
             case TECH_SUPPORT:
@@ -33,5 +33,18 @@ public class DefaultUserFactory implements UserFactory {
             default:
                 throw new IllegalArgumentException("Unsupported role: " + role);
         }
+    }
+
+    public GraduateStudent createGraduateStudent(String id, String name, String email, String passwordHash,
+            DegreeType degree) {
+        return new GraduateStudent(id, name, email, passwordHash, id, degree);
+    }
+
+    public Manager createManager(String id, String name, String email, String passwordHash, ManagerType managerType) {
+        return new Manager(id, name, email, passwordHash, "EMP-" + id, 600000, managerType);
+    }
+
+    public Teacher createTeacher(String id, String name, String email, String passwordHash, TeacherPosition position) {
+        return new Teacher(id, name, email, passwordHash, "EMP-" + id, 450000, position);
     }
 }

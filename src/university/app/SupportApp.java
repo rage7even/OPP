@@ -1,4 +1,4 @@
-﻿package university.app;
+package university.app;
 
 import java.util.Scanner;
 
@@ -18,6 +18,7 @@ public final class SupportApp {
             if (currentUser instanceof TechSupportSpecialist) {
                 System.out.println(I18n.t("support.assign"));
                 System.out.println(I18n.t("support.accept"));
+                System.out.println(I18n.t("support.reject"));
                 System.out.println(I18n.t("support.done"));
                 System.out.println(I18n.t("support.show"));
             }
@@ -30,26 +31,33 @@ public final class SupportApp {
                     break;
                 case 2:
                     if (currentUser instanceof TechSupportSpecialist) {
-                        assignFirstRequest((TechSupportSpecialist) currentUser);
+                        assignRequest(scanner, (TechSupportSpecialist) currentUser);
                     } else {
                         System.out.println(I18n.t("access.denied"));
                     }
                     break;
                 case 3:
                     if (currentUser instanceof TechSupportSpecialist) {
-                        acceptFirstRequest((TechSupportSpecialist) currentUser);
+                        acceptRequest(scanner, (TechSupportSpecialist) currentUser);
                     } else {
                         System.out.println(I18n.t("access.denied"));
                     }
                     break;
                 case 4:
                     if (currentUser instanceof TechSupportSpecialist) {
-                        markFirstDone((TechSupportSpecialist) currentUser);
+                        rejectRequest(scanner, (TechSupportSpecialist) currentUser);
                     } else {
                         System.out.println(I18n.t("access.denied"));
                     }
                     break;
                 case 5:
+                    if (currentUser instanceof TechSupportSpecialist) {
+                        markDone(scanner, (TechSupportSpecialist) currentUser);
+                    } else {
+                        System.out.println(I18n.t("access.denied"));
+                    }
+                    break;
+                case 6:
                     if (currentUser instanceof TechSupportSpecialist) {
                         showRequests();
                     } else {
@@ -71,43 +79,68 @@ public final class SupportApp {
         System.out.println(I18n.f("created", AppFormatter.supportRequest(request)));
     }
 
-    private static void assignFirstRequest(TechSupportSpecialist support) {
-        SupportRequest request = firstRequest();
+    private static void assignRequest(Scanner scanner, TechSupportSpecialist support) {
+        SupportRequest request = selectRequest(scanner);
         if (request == null) {
-            System.out.println(I18n.t("no.requests"));
+            return;
+        }
+        if (!canHandle(request, support)) {
+            System.out.println(I18n.t("access.denied"));
             return;
         }
         University.getInstance().getSupportDesk().assignToSpecialist(request, support);
         System.out.println(I18n.f("assigned", AppFormatter.supportRequest(request)));
     }
 
-    private static void acceptFirstRequest(TechSupportSpecialist support) {
-        SupportRequest request = firstRequest();
+    private static void acceptRequest(Scanner scanner, TechSupportSpecialist support) {
+        SupportRequest request = selectRequest(scanner);
         if (request == null) {
-            System.out.println(I18n.t("no.requests"));
             return;
         }
         if (request.getAssignedTo() == null) {
             request.assignTo(support);
+        } else if (!request.getAssignedTo().equals(support)) {
+            System.out.println(I18n.t("access.denied"));
+            return;
         }
-        request.getAssignedTo().acceptRequest(request);
-        System.out.println(I18n.f("accepted", AppFormatter.supportRequest(request)));
+        try {
+            request.getAssignedTo().acceptRequest(request);
+            System.out.println(I18n.f("accepted", AppFormatter.supportRequest(request)));
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
-    private static void markFirstDone(TechSupportSpecialist support) {
-        SupportRequest request = firstRequest();
+    private static void rejectRequest(Scanner scanner, TechSupportSpecialist support) {
+        SupportRequest request = selectRequest(scanner);
         if (request == null) {
-            System.out.println(I18n.t("no.requests"));
             return;
         }
         if (request.getAssignedTo() == null) {
             request.assignTo(support);
+        } else if (!request.getAssignedTo().equals(support)) {
+            System.out.println(I18n.t("access.denied"));
+            return;
         }
-        if (request.getStatus() != university.enums.RequestStatus.ACCEPTED) {
-            request.getAssignedTo().acceptRequest(request);
+        request.getAssignedTo().rejectRequest(request);
+        System.out.println(I18n.f("rejected", AppFormatter.supportRequest(request)));
+    }
+
+    private static void markDone(Scanner scanner, TechSupportSpecialist support) {
+        SupportRequest request = selectRequest(scanner);
+        if (request == null) {
+            return;
         }
-        request.getAssignedTo().markDone(request);
-        System.out.println(I18n.f("done", AppFormatter.supportRequest(request)));
+        if (request.getAssignedTo() == null || !request.getAssignedTo().equals(support)) {
+            System.out.println(I18n.t("access.denied"));
+            return;
+        }
+        try {
+            request.getAssignedTo().markDone(request);
+            System.out.println(I18n.f("done", AppFormatter.supportRequest(request)));
+        } catch (RuntimeException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     private static void showRequests() {
@@ -116,11 +149,24 @@ public final class SupportApp {
         }
     }
 
-    private static SupportRequest firstRequest() {
+    private static SupportRequest selectRequest(Scanner scanner) {
         if (University.getInstance().getSupportRequests().isEmpty()) {
+            System.out.println(I18n.t("no.requests"));
             return null;
         }
-        return University.getInstance().getSupportRequests().get(0);
+        showRequests();
+        String requestId = ConsoleInput.readLine(scanner, I18n.t("request.id"));
+        for (SupportRequest request : University.getInstance().getSupportRequests()) {
+            if (request.getRequestId().equals(requestId)) {
+                return request;
+            }
+        }
+        System.out.println(I18n.t("no.requests"));
+        return null;
+    }
+
+    private static boolean canHandle(SupportRequest request, TechSupportSpecialist support) {
+        return request.getAssignedTo() == null || request.getAssignedTo().equals(support);
     }
 }
 

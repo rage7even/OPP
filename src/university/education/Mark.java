@@ -10,13 +10,16 @@ public class Mark implements Serializable {
     private double finalExam;
 
     public Mark(double attestation1, double attestation2, double finalExam) {
+        validateRange("Attestation 1", attestation1, 30);
+        validateRange("Attestation 2", attestation2, 30);
+        validateRange("Final exam", finalExam, 40);
         this.attestation1 = attestation1;
         this.attestation2 = attestation2;
         this.finalExam = finalExam;
     }
 
     public double getFinalGrade() {
-        return attestation1 * 0.3 + attestation2 * 0.3 + finalExam * 0.4;
+        return attestation1 + attestation2 + finalExam;
     }
 
     public double getAttestation1() {
@@ -64,6 +67,12 @@ public class Mark implements Serializable {
             return "D";
         }
         return "Fail";
+    }
+
+    private void validateRange(String label, double value, double max) {
+        if (value < 0 || value > max) {
+            throw new IllegalArgumentException(label + " must be between 0 and " + max);
+        }
     }
 
     @Override

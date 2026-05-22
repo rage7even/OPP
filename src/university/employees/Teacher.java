@@ -7,9 +7,11 @@ import java.util.List;
 import university.communication.Complaint;
 import university.education.Course;
 import university.education.Enrollment;
+import university.education.Lesson;
 import university.education.Mark;
 import university.enums.TeacherPosition;
 import university.enums.Urgency;
+import university.exceptions.UnauthorizedActionException;
 import university.research.ResearcherProfile;
 import university.users.Student;
 import university.users.TeacherRating;
@@ -42,8 +44,30 @@ public class Teacher extends Employee {
         }
     }
 
+    public void promoteToProfessor() {
+        position = TeacherPosition.PROFESSOR;
+        if (getResearcherProfile() == null) {
+            setResearcherProfile(new ResearcherProfile("RP-" + getId(), this, "Faculty"));
+        }
+    }
+
     public void putMark(Enrollment enrollment, Mark mark) {
+        if (!teaches(enrollment.getOffering().getCourse())) {
+            throw new UnauthorizedActionException("put mark for course not assigned to teacher");
+        }
         enrollment.setMark(mark);
+    }
+
+    private boolean teaches(Course course) {
+        if (courses.contains(course)) {
+            return true;
+        }
+        for (Lesson lesson : course.getLessons()) {
+            if (this.equals(lesson.getInstructor())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public Complaint sendComplaint(Manager dean, List<Student> students, Urgency urgency, String text) {

@@ -26,6 +26,7 @@ public class SupportRequest implements Serializable {
     public void assignTo(TechSupportSpecialist specialist) {
         this.assignedTo = specialist;
         specialist.addRequest(this);
+        notifyCreator("Support request assigned: " + requestId + " -> " + specialist.getName());
     }
 
     public void markViewed() {
@@ -39,10 +40,12 @@ public class SupportRequest implements Serializable {
             throw new UnauthorizedActionException("accept unassigned support request");
         }
         status = RequestStatus.ACCEPTED;
+        notifyCreator("Support request accepted: " + requestId);
     }
 
     public void reject() {
         status = RequestStatus.REJECTED;
+        notifyCreator("Support request rejected: " + requestId);
     }
 
     public void done() {
@@ -50,6 +53,7 @@ public class SupportRequest implements Serializable {
             throw new UnauthorizedActionException("complete request before acceptance");
         }
         status = RequestStatus.DONE;
+        notifyCreator("Support request completed: " + requestId);
     }
 
     public String getRequestId() {
@@ -70,6 +74,12 @@ public class SupportRequest implements Serializable {
 
     public RequestStatus getStatus() {
         return status;
+    }
+
+    private void notifyCreator(String message) {
+        if (createdBy != null) {
+            createdBy.addNotification(message);
+        }
     }
 
     @Override

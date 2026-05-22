@@ -7,7 +7,9 @@ import java.util.List;
 
 import university.education.Course;
 import university.education.CourseOffering;
+import university.communication.Message;
 import university.news.NewsItem;
+import university.patterns.Observer;
 import university.reports.LogEntry;
 import university.research.Journal;
 import university.services.AuthService;
@@ -24,6 +26,8 @@ import university.services.SupportDeskService;
 import university.services.UniversityDataStore;
 import university.services.UserManagementService;
 import university.support.SupportRequest;
+import university.users.StudentOrganization;
+import university.users.StudentOrganizationRequest;
 import university.users.User;
 
 public class University implements Serializable {
@@ -37,6 +41,9 @@ public class University implements Serializable {
     private List<NewsItem> newsFeed;
     private List<SupportRequest> supportRequests;
     private List<LogEntry> logEntries;
+    private List<Message> messages;
+    private List<StudentOrganization> studentOrganizations;
+    private List<StudentOrganizationRequest> studentOrganizationRequests;
 
     private transient AuthService authService;
     private transient CourseRegistrationService registrationService;
@@ -58,6 +65,9 @@ public class University implements Serializable {
         newsFeed = new ArrayList<NewsItem>();
         supportRequests = new ArrayList<SupportRequest>();
         logEntries = new ArrayList<LogEntry>();
+        messages = new ArrayList<Message>();
+        studentOrganizations = new ArrayList<StudentOrganization>();
+        studentOrganizationRequests = new ArrayList<StudentOrganizationRequest>();
         rebuildServices();
     }
 
@@ -81,7 +91,11 @@ public class University implements Serializable {
         newsFeed = loaded.newsFeed;
         supportRequests = loaded.supportRequests;
         logEntries = loaded.logEntries;
+        messages = loaded.messages;
+        studentOrganizations = loaded.studentOrganizations;
+        studentOrganizationRequests = loaded.studentOrganizationRequests;
         rebuildServices();
+        reconnectJournalServices();
     }
 
     public void clear() {
@@ -92,6 +106,9 @@ public class University implements Serializable {
         newsFeed.clear();
         supportRequests.clear();
         logEntries.clear();
+        messageList().clear();
+        organizationList().clear();
+        organizationRequestList().clear();
     }
 
     private void rebuildServices() {
@@ -107,6 +124,19 @@ public class University implements Serializable {
         notificationService = new NotificationService();
         reportService = new ReportService();
         userManagementService = new UserManagementService();
+    }
+
+    private void reconnectJournalServices() {
+        for (Journal journal : journals) {
+            List<Observer> subscribers = new ArrayList<Observer>(journal.getSubscribers());
+            for (Observer subscriber : subscribers) {
+                if (subscriber instanceof NewsService || subscriber instanceof NotificationService) {
+                    journal.unsubscribe(subscriber);
+                }
+            }
+            journal.subscribe(newsService);
+            journal.subscribe(notificationService);
+        }
     }
 
     public void addUser(User user) {
@@ -154,6 +184,24 @@ public class University implements Serializable {
         logEntries.add(entry);
     }
 
+    public void addMessage(Message message) {
+        if (message != null) {
+            messageList().add(message);
+        }
+    }
+
+    public void addStudentOrganization(StudentOrganization organization) {
+        if (organization != null && !organizationList().contains(organization)) {
+            organizationList().add(organization);
+        }
+    }
+
+    public void addStudentOrganizationRequest(StudentOrganizationRequest request) {
+        if (request != null && !organizationRequestList().contains(request)) {
+            organizationRequestList().add(request);
+        }
+    }
+
     public List<User> getUsers() {
         return users;
     }
@@ -180,6 +228,18 @@ public class University implements Serializable {
 
     public List<LogEntry> getLogEntries() {
         return Collections.unmodifiableList(logEntries);
+    }
+
+    public List<Message> getMessages() {
+        return Collections.unmodifiableList(messageList());
+    }
+
+    public List<StudentOrganization> getStudentOrganizations() {
+        return Collections.unmodifiableList(organizationList());
+    }
+
+    public List<StudentOrganizationRequest> getStudentOrganizationRequests() {
+        return Collections.unmodifiableList(organizationRequestList());
     }
 
     public AuthService getAuthService() {
@@ -220,5 +280,26 @@ public class University implements Serializable {
 
     public UserManagementService getUserManagementService() {
         return userManagementService;
+    }
+
+    private List<StudentOrganization> organizationList() {
+        if (studentOrganizations == null) {
+            studentOrganizations = new ArrayList<StudentOrganization>();
+        }
+        return studentOrganizations;
+    }
+
+    private List<Message> messageList() {
+        if (messages == null) {
+            messages = new ArrayList<Message>();
+        }
+        return messages;
+    }
+
+    private List<StudentOrganizationRequest> organizationRequestList() {
+        if (studentOrganizationRequests == null) {
+            studentOrganizationRequests = new ArrayList<StudentOrganizationRequest>();
+        }
+        return studentOrganizationRequests;
     }
 }

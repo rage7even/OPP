@@ -57,6 +57,9 @@ public class CourseRegistrationService implements Serializable {
             throw new CourseNotAvailableException(course.getCourseId());
         }
         enrollment.approve();
+        enrollment.getStudent().addNotification("Registration approved: "
+                + enrollment.getOffering().getCourse().getName()
+                + " (" + enrollment.getEnrollmentId() + ")");
         University.getInstance().getLogService().log(manager, "Approved " + enrollment.getEnrollmentId());
     }
 
@@ -65,6 +68,9 @@ public class CourseRegistrationService implements Serializable {
             throw new IllegalStateException("approved enrollment cannot be rejected");
         }
         enrollment.reject();
+        enrollment.getStudent().addNotification("Registration rejected: "
+                + enrollment.getOffering().getCourse().getName()
+                + " (" + enrollment.getEnrollmentId() + ")");
         University.getInstance().getLogService().log(manager, "Rejected " + enrollment.getEnrollmentId());
     }
 

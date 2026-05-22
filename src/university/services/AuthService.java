@@ -16,13 +16,15 @@ public class AuthService implements Serializable {
 
     public Session login(String email, String password) {
         User user = userRepo.findByEmail(email);
-        if (user == null || !user.getPasswordHash().equals(password)) {
+        if (user == null || !user.passwordMatches(password)) {
             throw new UnauthorizedActionException("login failed for " + email);
         }
         return new Session("S-" + System.nanoTime(), user);
     }
 
     public void logout(Session session) {
-        // Session is a simple value object in this console demo.
+        if (session != null) {
+            session.clear();
+        }
     }
 }

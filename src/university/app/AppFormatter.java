@@ -1,10 +1,12 @@
-﻿package university.app;
+package university.app;
 
 import university.education.Course;
 import university.education.CourseOffering;
 import university.education.Enrollment;
 import university.education.Mark;
 import university.support.SupportRequest;
+import university.users.StudentOrganization;
+import university.users.StudentOrganizationRequest;
 
 public final class AppFormatter {
     private AppFormatter() {
@@ -41,9 +43,39 @@ public final class AppFormatter {
     }
 
     public static String supportRequest(SupportRequest request) {
-        return I18n.t("request") + " " + request.getRequestId()
+        String result = I18n.t("request") + " " + request.getRequestId()
                 + ", " + I18n.t("status") + ": " + I18n.requestStatus(request.getStatus())
                 + ", " + request.getDescription();
+        if (request.getAssignedTo() != null) {
+            result += ", assignedTo=" + request.getAssignedTo().getName();
+        }
+        return result;
+    }
+
+    public static String studentOrganization(StudentOrganization organization) {
+        String head = organization.getHead() == null ? "-" : organization.getHead().getName();
+        return organization.getOrgId()
+                + " - "
+                + organization.getName()
+                + ", members=" + organization.getMembers().size()
+                + ", head=" + head
+                + ", " + organization.getDescription();
+    }
+
+    public static String studentOrganizationRequest(StudentOrganizationRequest request) {
+        return request.getRequestId()
+                + " - "
+                + request.getStudent().getName()
+                + ", "
+                + request.getOrganizationId()
+                + ", "
+                + request.getOrganizationName()
+                + ", "
+                + I18n.t("status")
+                + ": "
+                + I18n.registrationStatus(request.getStatus())
+                + ", "
+                + request.getDescription();
     }
 }
 
