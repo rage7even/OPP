@@ -151,7 +151,6 @@ public final class Main {
         String password = ConsoleInput.readLine(scanner, I18n.t("password"));
         try {
             Session session = University.getInstance().getAuthService().login(email, password);
-            AppLanguage.use(session.getUser());
             System.out.println(I18n.f("logged.in", session.getUser().getName()));
             return session;
         } catch (UnauthorizedActionException e) {
